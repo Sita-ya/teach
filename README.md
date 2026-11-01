@@ -11,7 +11,7 @@
 
 你需要準備：一個 GitHub 帳號、一個 Google 帳號。Google 帳號建議用**個人 Gmail**，學校發的教育版帳號常會封鎖這類自建應用程式。
 
-下文所有 `你的帳號` 都請換成你自己的 GitHub 帳號名稱。
+這份說明已經套用你的設定：GitHub 帳號是 `Sita-ya`，repo 名稱是 `teach`，所以網址是 `https://sita-ya.github.io/teach/`。GitHub Pages 的網址一律用小寫，填網址時請照抄下面的小寫寫法。
 
 ---
 
@@ -22,7 +22,7 @@
 repository（簡稱 repo）就是 GitHub 上放一個專案檔案的資料夾。
 
 1. 登入 [github.com](https://github.com)，按右上角的 **＋** → **New repository**。
-2. **Repository name** 填 `math-whiteboard`（可以自己取，但只能用英文、數字和連字號，而且會出現在網址裡）。
+2. **Repository name** 填 `teach`（只能用英文、數字和連字號，而且會出現在網址裡）。
 3. 選 **Public**。免費帳號要公開的 repo 才能用 GitHub Pages。公開的只有程式碼，你的黑板內容存在你的雲端硬碟，不會公開。
 4. 按 **Create repository**。
 
@@ -38,7 +38,7 @@ repository（簡稱 repo）就是 GitHub 上放一個專案檔案的資料夾。
 2. **Source** 選 **Deploy from a branch**。
 3. **Branch** 選 `main`，資料夾選 `/ (root)`，按 **Save**。
 4. 等 1 到 2 分鐘，重新整理這一頁，上方會出現網址：
-   `https://你的帳號.github.io/math-whiteboard/`
+   `https://sita-ya.github.io/teach/`
 
 打開這個網址，應該會看到白板首頁，上面寫著「雲端同步還沒設定」。到這一步，白板已經可以用，只是資料還只存在那台電腦。
 
@@ -91,9 +91,9 @@ Google 的設定畫面偶爾會改版，按鈕位置或名稱可能和下面略�
 2. **應用程式類型**選「**網頁應用程式**」，名稱隨意，例如 `白板`。
 3. 選好「網頁應用程式」後，表單才會往下展開。名稱欄位下方有一區「**已授權的 JavaScript 來源**」（英文介面是 Authorized JavaScript origins），按該區的 **＋ 新增 URI**，填：
    ```
-   https://你的帳號.github.io
+   https://sita-ya.github.io
    ```
-   只填到 `.io` 為止，**不要**加 `/math-whiteboard`，結尾也不要加斜線。
+   只填到 `.io` 為止，**不要**加 `/teach`，結尾也不要加斜線。
 4. 「已授權的重新導向 URI」留空。
 5. 按 **建立**。
 6. 畫面會顯示「用戶端 ID」，長得像 `123456789012-abcdefg.apps.googleusercontent.com`，把它複製下來。
@@ -159,7 +159,7 @@ Google 說明設定生效可能要等幾分鐘，偶爾會到幾個小時。下�
 
 | 狀況 | 原因與處理 |
 |---|---|
-| 登入視窗顯示 `origin_mismatch` 或 `redirect_uri_mismatch` | 2-6 的「已授權的 JavaScript 來源」填錯。要完全等於 `https://你的帳號.github.io`，不能有路徑或結尾斜線。改完等幾分鐘再試。 |
+| 登入視窗顯示 `origin_mismatch` 或 `redirect_uri_mismatch` | 2-6 的「已授權的 JavaScript 來源」填錯。要完全等於 `https://sita-ya.github.io`，不能有路徑或結尾斜線。改完等幾分鐘再試。 |
 | 顯示 `access_denied`、「尚未完成 Google 驗證程序」 | 你登入的帳號不在 2-4 的測試使用者名單裡。 |
 | 登入成功，但一直顯示「同步失敗：http 403」 | 可能是 2-2 沒有啟用 Google Drive API，或第四部分沒有勾選雲端硬碟權限。啟用 API 後，在白板按「登出」→「只登出」，再重新登入並勾選權限。 |
 | 按登入沒有反應 | 瀏覽器擋了彈出式視窗，請允許這個網站開啟彈出式視窗。 |
