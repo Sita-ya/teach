@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>數學電子白板</title>
+<style>
+:root{--ui:rgba(28,33,39,.95);--ui2:#323a44;--acc:#27a99a;--txt:#eef2f5;--dim:#9aa6b2}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;color:var(--txt);overscroll-behavior:none}
+#stage{position:absolute;touch-action:none;overflow:hidden;background:#24503d}
+#stage canvas{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
+#editor{position:absolute;display:none;margin:0;padding:0;border:none;outline:2px dashed #27d3bf;outline-offset:6px;background:rgba(0,0,0,.08);resize:none;overflow:hidden;white-space:pre;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;font-weight:500;line-height:1.25;touch-action:auto;user-select:text;-webkit-user-select:text;z-index:5}
+#dock{position:fixed;left:0;right:0;bottom:12px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 14px;pointer-events:none;transform-origin:bottom center;z-index:10}
+#dock.al-left{align-items:flex-start;transform-origin:bottom left}
+#dock.al-right{align-items:flex-end;transform-origin:bottom right}
+#dock>*{pointer-events:auto}
+#bar{display:flex;align-items:center;gap:3px;padding:8px 10px;background:var(--ui);border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,.4);flex-shrink:0;white-space:nowrap}
+#bar.min>*:not(.keep){display:none}
+.btn{width:56px;height:56px;border:none;border-radius:13px;background:transparent;color:var(--txt);display:grid;place-items:center;cursor:pointer;padding:0;position:relative}
+.btn svg{width:28px;height:28px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;margin-bottom:10px}
+.btn.nolab svg{margin-bottom:0}
+.btn small{position:absolute;bottom:3px;left:0;right:0;font-size:11px;color:var(--dim);text-align:center}
+.btn.on small{color:#e8fffb}
+.btn:active{background:var(--ui2)}
+.btn.on{background:var(--acc);color:#fff}
+.btn:disabled{opacity:.3}
+#bname{max-width:150px;overflow:hidden;text-overflow:ellipsis;font-size:15px;color:var(--dim);margin:0 6px 0 2px}
+#colors,#widths{display:flex;align-items:center}
+.sep{width:1px;height:38px;background:#46505b;margin:0 5px}
+.sw{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,255,255,.25);margin:0 3px;cursor:pointer;padding:0}
+.sw.on{outline:3px solid #fff;outline-offset:3px}
+.wd{width:46px;height:56px;border:none;background:transparent;border-radius:12px;display:grid;place-items:center;cursor:pointer;padding:0}
+.wd i{display:block;border-radius:50%;background:var(--txt)}
+.wd.on{background:var(--ui2);box-shadow:inset 0 0 0 2px var(--acc)}
+#pg{min-width:64px;text-align:center;font-size:18px;font-variant-numeric:tabular-nums}
+.panel{display:none;flex-wrap:wrap;align-items:center;gap:10px 18px;max-width:1300px;padding:10px 14px;background:var(--ui);border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.panel.show{display:flex}
+.og{display:flex;align-items:center;gap:6px}
+.ol{font-size:16px;color:var(--dim);margin-right:2px}
+.ob{min-width:48px;height:48px;padding:0 14px;border:none;border-radius:11px;background:var(--ui2);color:var(--txt);font-size:18px;font-family:inherit;cursor:pointer}
+.ob.sm{min-width:44px;padding:0 8px;font-size:16px}
+.ob.on{background:var(--acc);color:#fff}
+.ob.pri{background:#e9a53a;color:#1d1d1d;font-weight:700}
+.ob.danger{background:#d9534f;color:#fff}
+.angv{min-width:76px;text-align:center;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.note{font-size:15px;color:var(--dim)}
+.bgo{width:96px;height:58px;border-radius:10px;border:3px solid transparent;cursor:pointer;font-size:15px;font-family:inherit}
+.bgo.on{border-color:var(--acc)}
+#hint{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--ui);color:var(--txt);padding:10px 20px;border-radius:999px;font-size:20px;display:none;align-items:center;gap:14px;box-shadow:0 6px 24px rgba(0,0,0,.4);z-index:11;white-space:nowrap}
+#hint.show{display:flex}
+#hint button{height:40px;padding:0 16px;border:none;border-radius:999px;background:#d9534f;color:#fff;font-size:17px;font-family:inherit;cursor:pointer}
+
+/* home */
+#home{position:fixed;inset:0;z-index:30;background:#14181c;overflow-y:auto;touch-action:pan-y;padding:40px 56px 60px}
+#home.hide{display:none}
+#home h1{margin:0 0 6px;font-size:34px;font-weight:700;letter-spacing:.02em}
+#home .sub{color:var(--dim);font-size:16px;margin-bottom:26px}
+.hrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+.hrow input{flex:1;min-width:320px;max-width:620px;height:56px;border-radius:12px;border:2px solid #39424d;background:#1e242a;color:var(--txt);font-size:20px;padding:0 16px;font-family:inherit;user-select:text;-webkit-user-select:text}
+.hrow input:focus{outline:none;border-color:var(--acc)}
+.hb{height:56px;padding:0 22px;border:none;border-radius:12px;font-size:19px;font-family:inherit;cursor:pointer;background:var(--ui2);color:var(--txt)}
+.hb.pri{background:var(--acc);color:#fff;font-weight:700}
+#warn{display:none;background:#5a3b16;color:#ffd9a6;border-radius:10px;padding:10px 16px;margin-bottom:16px;font-size:16px}
+#warn.show{display:block}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:22px;margin-top:24px}
+.card{background:#1e242a;border-radius:14px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.card:hover{border-color:#3a4652}
+.thumb{aspect-ratio:16/9;background:#24503d;display:block;width:100%;object-fit:cover}
+.cbody{padding:12px 14px 14px}
+.cname{font-size:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmeta{font-size:14px;color:var(--dim);margin:4px 0 10px}
+.cact{display:flex;gap:6px;flex-wrap:wrap}
+.cact button{height:40px;padding:0 12px;border:none;border-radius:9px;background:var(--ui2);color:var(--txt);font-size:15px;font-family:inherit;cursor:pointer}
+.cact button.del{color:#ff8a86}
+.empty{color:var(--dim);font-size:18px;padding:40px 0}
+#cloudBar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#1b2126;border:1px solid #2c343c;border-radius:14px;padding:12px 16px;margin-bottom:18px;min-height:56px}
+#cloudBar .hb{height:48px;font-size:17px}
+.cnote{color:var(--dim);font-size:16px}
+.cacct{font-size:17px;font-weight:700}
+.cdot{width:12px;height:12px;border-radius:50%;background:#7a8590}
+.cdot.ok{background:#3ccf8e}.cdot.busy,.cdot.dirty{background:#e9c46a}.cdot.auth,.cdot.err{background:#ff7b6e}
+.tag{display:inline-block;font-size:13px;padding:2px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;font-weight:500}
+.tag.cloud{background:#24435e;color:#bfe0ff}.tag.dirty{background:#5a4a16;color:#ffe08a}.tag.conf{background:#5c2420;color:#ffb3ab}
+.hb.danger{background:#d9534f;color:#fff}
+#modal .note{font-size:16px;color:var(--dim)}
+#bCloud.cs-auth small,#bCloud.cs-err small{color:#ff9d93}
+#bCloud.cs-busy small,#bCloud.cs-dirty small{color:#f0d07a}
+#modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
+#modal.show{display:flex}
+#modal .box{background:#20262c;border-radius:16px;padding:24px;width:min(560px,90vw);box-shadow:0 10px 40px rgba(0,0,0,.5)}
+#modal .mt{font-size:21px;margin-bottom:14px;line-height:1.5}
+#modal input{width:100%;height:54px;border-radius:10px;border:2px solid #39424d;background:#161a1e;color:var(--txt);font-size:20px;padding:0 14px;font-family:inherit;margin-bottom:16px;user-select:text;-webkit-user-select:text}
+#modal .mb{display:flex;justify-content:flex-end;gap:10px}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="cvS"></canvas>
+  <canvas id="cvI"></canvas>
+  <canvas id="cvO"></canvas>
+  <textarea id="editor" spellcheck="false"></textarea>
+</div>
+<div id="hint"></div>
+
+<div id="dock">
+  <div id="pop" class="panel"></div>
+  <div id="opts" class="panel"></div>
+  <div id="bar">
+    <button class="btn" id="bHome"><svg viewBox="0 0 24 24"><path d="M4 11l8-7 8 7"/><path d="M6 10v10h12V10"/></svg><small>首頁</small></button>
+    <span id="bname"></span>
+    <button class="btn" id="bCloud" style="display:none"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/></svg><small>雲端</small></button>
+    <span class="sep"></span>
+    <button class="btn tool" data-tool="pen"><svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg><small>畫筆</small></button>
+    <button class="btn tool" data-tool="hl"><svg viewBox="0 0 24 24"><path d="M9 15l-3-3 9-9 6 6-9 9z"/><path d="M6 12l-2 6 4 0 1-3"/><path d="M3 21h8"/></svg><small>螢光筆</small></button>
+    <button class="btn tool" data-tool="eraser"><svg viewBox="0 0 24 24"><path d="M9 20h11"/><path d="M4.5 14.5l9-9 6 6-8.5 8.5H9z"/><path d="M8.5 10.5l6 6"/></svg><small>橡皮擦</small></button>
+    <span class="sep"></span>
+    <button class="btn tool" data-tool="text"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2"/><path d="M12 4v16"/><path d="M9 20h6"/></svg><small>文字</small></button>
+    <button class="btn tool" data-tool="line"><svg viewBox="0 0 24 24"><path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.4" fill="currentColor"/><circle cx="19" cy="5" r="1.4" fill="currentColor"/></svg><small>直線</small></button>
+    <button class="btn tool" data-tool="circle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg><small>圓</small></button>
+    <button class="btn tool" data-tool="sector"><svg viewBox="0 0 24 24"><path d="M5 18H19A14 14 0 0 0 13 6.5Z"/><path d="M9 18A4 4 0 0 0 7.3 14.7"/></svg><small>扇形</small></button>
+    <button class="btn tool" data-tool="select"><svg viewBox="0 0 24 24"><path d="M6 3l13 8-6 1.8L10.5 19z"/></svg><small>選取</small></button>
+    <button class="btn" id="bImg"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><small>圖片</small></button>
+    <span class="sep"></span>
+    <span id="colors"></span>
+    <span class="sep"></span>
+    <span id="widths"></span>
+    <span class="sep"></span>
+    <button class="btn" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg><small>復原</small></button>
+    <button class="btn" id="bRedo"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg><small>重做</small></button>
+    <button class="btn" id="bClear"><svg viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg><small>清除</small></button>
+    <span class="sep"></span>
+    <button class="btn nolab" id="bPrev"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <span id="pg">1 / 1</span>
+    <button class="btn nolab" id="bNext"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="btn" id="bAdd"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><small>頁面</small></button>
+    <span class="sep"></span>
+    <button class="btn" id="bBg"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M3 15h18M9 5v14M15 5v14"/></svg><small>背景</small></button>
+    <button class="btn" id="bFull"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg><small>全螢幕</small></button>
+    <button class="btn" id="bAlign"><svg viewBox="0 0 24 24"><path d="M3 12h18"/><path d="M7 8l-4 4 4 4M17 8l4 4-4 4"/></svg><small>移位</small></button>
+    <button class="btn keep nolab" id="bMin"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+  </div>
+</div>
+<input type="file" id="fImg" accept="image/*" multiple hidden>
+
+<div id="home">
+  <h1>數學電子白板</h1>
+  <div class="sub">每塊黑板可以有很多頁，像簡報一樣翻頁，上課時直接在上面寫。登入 Google 後會自動同步到你的雲端硬碟，換電腦也能接著用。</div>
+  <div id="cloudBar"></div>
+  <div id="warn"></div>
+  <div class="hrow">
+    <input id="newName" placeholder="新黑板名稱，例如：扇形的弧長 第1節">
+    <button class="hb pri" id="bCreate">建立新黑板</button>
+    <button class="hb" id="bImport">匯入檔案</button>
+    <input type="file" id="fImport" accept=".json,application/json" hidden>
+  </div>
+  <div id="grid"></div>
+</div>
+
+<div id="modal"><div class="box"><div class="mt" id="mTitle"></div><input id="mInput"><div class="mb" id="mBtns"></div></div></div>
+
+<script src="config.js"></script>
+<script>
+(()=>{
+const W=1920,H=1080,TAU=Math.PI*2;
+const $=s=>document.querySelector(s);
+const stage=$('#stage'),cvS=$('#cvS'),cvI=$('#cvI'),cvO=$('#cvO'),editor=$('#editor');
+const ctxS=cvS.getContext('2d'),ctxI=cvI.getContext('2d'),ctxO=cvO.getContext('2d');
+const dock=$('#dock'),bar=$('#bar'),opts=$('#opts'),pop=$('#pop'),hint=$('#hint'),home=$('#home');
+const FONT='"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif';
+const tfont=sz=>`500 ${sz}px ${FONT}`;
+
+const COLORS=['#ffffff','#1b1b1b','#ffd84d','#ff5d5d','#4ea8ff','#5fe08c','#ff9f43','#c792ff'];
+const WIDTHS={pen:[3,6,12],hl:[16,28,44],eraser:[26,54,110]};
+const SLW=[3,5,8];
+const TSIZES=[36,54,80,120];
+const BGS={green:{c:'#24503d',grid:0,dark:1,name:'綠板'},white:{c:'#fafaf6',grid:0,dark:0,name:'白板'},greengrid:{c:'#24503d',grid:1,dark:1,name:'綠板方格'},whitegrid:{c:'#fafaf6',grid:1,dark:0,name:'白板方格'}};
+const GRID=60;
+
+const S={tool:'pen',color:'#ffffff',wi:1,eraserMode:'pixel',snap:5,showAngle:true,showDashed:true,fill:true,cCenter:true,cRadius:false,cDiv:0,bg:'green',angle:60,align:'center',tsize:54};
+try{const a=localStorage.getItem('mathboard-align');if(a)S.align=a;}catch(_){}
+let pages=[newPage()],cur=0,boardId=null,boardName='';
+const P=()=>pages[cur];
+function newPage(){return{shapes:[],ink:[],hist:[],redo:[]}}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+
+let scale=1,dpr=1;
+const active=new Map();
+let shapeOp=null,pending=null,selected=null,editing=null;
+
+/* ================= storage ================= */
+const Store={db:null,mem:{meta:new Map(),data:new Map()},ok:true,
+  async open(){
+    if(this.db||!this.ok)return this.db;
+    try{
+      this.db=await new Promise((res,rej)=>{const r=indexedDB.open('mathboard',1);
+        r.onupgradeneeded=()=>{const d=r.result;d.createObjectStore('meta',{keyPath:'id'});d.createObjectStore('data',{keyPath:'id'});};
+        r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);r.onblocked=()=>rej(new Error('blocked'));});
+    }catch(e){this.ok=false;this.db=null;}
+    return this.db;
+  },
+  async run(store,mode,fn,memFn){
+    const d=await this.open();
+    if(!d)return memFn(this.mem[store]);
+    return new Promise((res,rej)=>{const t=d.transaction(store,mode),req=fn(t.objectStore(store));t.oncomplete=()=>res(req.result);t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error);});
+  },
+  all(st){return this.run(st,'readonly',s=>s.getAll(),m=>[...m.values()])},
+  get(st,id){return this.run(st,'readonly',s=>s.get(id),m=>m.get(id))},
+  put(st,v){return this.run(st,'readwrite',s=>s.put(v),m=>{m.set(v.id,v)})},
+  del(st,id){return this.run(st,'readwrite',s=>s.delete(id),m=>{m.delete(id)})}
+};
+
+function serializePages(){return pages.map(p=>({shapes:p.shapes,ink:p.ink.map(it=>({t:it.t,c:it.c,w:it.w,p:it.p}))}))}
+let saveT=null,saving=Promise.resolve();
+function save(){if(!boardId)return;clearTimeout(saveT);saveT=setTimeout(()=>{saveT=null;saving=saveBoard();},800);}
+async function flushSave(){if(saveT){clearTimeout(saveT);saveT=null;saving=saveBoard();}await saving;}
+async function saveBoard(){
+  if(!boardId)return;
+  const id=boardId;
+  try{
+    await Store.put('data',{id,bg:S.bg,pages:serializePages()});
+    const old=await Store.get('meta',id)||{id};
+    await Store.put('meta',{...old,id,name:boardName,updated:Date.now(),pageCount:pages.length,thumb:makeThumb(pages[0]),dirty:true});
+    Cloud.schedulePush(id);
+  }catch(e){flash('儲存失敗，請匯出檔案備份');}
+}
+
+/* ================= layout ================= */
+function layout(){
+  const vw=innerWidth,vh=innerHeight;
+  let w=vw,h=vw*9/16; if(h>vh){h=vh;w=vh*16/9;}
+  Object.assign(stage.style,{width:w+'px',height:h+'px',left:(vw-w)/2+'px',top:(vh-h)/2+'px'});
+  scale=w/W; dpr=Math.min(window.devicePixelRatio||1,2);
+  for(const c of [cvS,cvI,cvO]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
+  for(const x of [ctxS,ctxI,ctxO]) x.setTransform(scale*dpr,0,0,scale*dpr,0,0);
+  applyBg(); fitDock(); if(editing)placeEditor(); renderAll(false);
+}
+function fitDock(){
+  dock.style.transform='';
+  const s=Math.min(1,(innerWidth-28)/bar.offsetWidth);
+  dock.style.transform=s<1?`scale(${s})`:'';
+}
+function applyBg(){
+  const b=BGS[S.bg];
+  stage.style.backgroundColor=b.c;
+  if(b.grid){
+    const g=b.dark?'rgba(255,255,255,.13)':'rgba(0,0,0,.11)', sz=GRID*scale;
+    stage.style.backgroundImage=`linear-gradient(${g} 1px,transparent 1px),linear-gradient(90deg,${g} 1px,transparent 1px)`;
+    stage.style.backgroundSize=`${sz}px ${sz}px`;
+  } else stage.style.backgroundImage='none';
+}
+function paintBg(x){
+  const b=BGS[S.bg];x.fillStyle=b.c;x.fillRect(0,0,W,H);
+  if(b.grid){x.strokeStyle=b.dark?'rgba(255,255,255,.13)':'rgba(0,0,0,.11)';x.lineWidth=1;x.beginPath();for(let i=0;i<=W;i+=GRID){x.moveTo(i+.5,0);x.lineTo(i+.5,H);}for(let j=0;j<=H;j+=GRID){x.moveTo(0,j+.5);x.lineTo(W,j+.5);}x.stroke();}
+}
+
+/* ================= helpers ================= */
+const r1=v=>Math.round(v*10)/10;
+const hyp=(a,b)=>Math.hypot(a,b);
+function norm(a){while(a>Math.PI)a-=TAU;while(a<=-Math.PI)a+=TAU;return a}
+function snapAng(a,step=15,tol=4){const d=a*180/Math.PI,n=Math.round(d/step)*step;return Math.abs(d-n)<tol?n*Math.PI/180:a}
+function rgba(hex,a){const n=parseInt(hex.slice(1),16);return`rgba(${n>>16},${n>>8&255},${n&255},${a})`}
+function distSeg(px,py,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,l=dx*dx+dy*dy;let t=l?((px-ax)*dx+(py-ay)*dy)/l:0;t=Math.max(0,Math.min(1,t));return hyp(px-ax-t*dx,py-ay-t*dy)}
+function sweepDeg(s){return Math.round(Math.abs(s.sweep)*180/Math.PI)}
+function isDark(){return BGS[S.bg].dark}
+function replaceShape(old,nw){const sh=P().shapes,i=sh.indexOf(old);if(i>=0)sh.splice(i,1,nw);return nw}
+
+/* images */
+const imgCache=new Map();
+function getImg(s){
+  let im=imgCache.get(s.id);
+  if(!im){im=new Image();im.onload=()=>{renderShapes();};im.src=s.src;imgCache.set(s.id,im);}
+  return im.complete&&im.naturalWidth?im:null;
+}
+function textBox(s){
+  const lines=s.text.split('\n');ctxO.save();ctxO.font=tfont(s.size);let w=0;
+  for(const l of lines)w=Math.max(w,ctxO.measureText(l).width);ctxO.restore();
+  return[s.x,s.y,Math.max(w,s.size*.5),lines.length*s.size*1.25];
+}
+function objBox(s){return s.type==='img'?[s.x,s.y,s.w,s.h]:textBox(s)}
+
+/* ================= drawing ================= */
+function drawInkItem(ctx,it){
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  if(it.t==='er'){ctx.globalCompositeOperation='destination-out';ctx.strokeStyle=ctx.fillStyle='#000';}
+  else{ctx.strokeStyle=ctx.fillStyle=it.c;if(it.t==='hl')ctx.globalAlpha=.38;}
+  ctx.lineWidth=it.w;const p=it.p;
+  if(p.length===1){ctx.beginPath();ctx.arc(p[0][0],p[0][1],it.w/2,0,TAU);ctx.fill();}
+  else{
+    ctx.beginPath();ctx.moveTo(p[0][0],p[0][1]);
+    for(let i=1;i<p.length-1;i++){ctx.quadraticCurveTo(p[i][0],p[i][1],(p[i][0]+p[i+1][0])/2,(p[i][1]+p[i+1][1])/2);}
+    const l=p[p.length-1];ctx.lineTo(l[0],l[1]);ctx.stroke();
+  }
+  ctx.restore();
+}
+function dot(ctx,x,y,r,c){ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fillStyle=c;ctx.fill()}
+function drawShape(ctx,s){
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=s.c;ctx.lineWidth=s.lw;
+  if(s.type==='img'){const im=getImg(s);if(im)ctx.drawImage(im,s.x,s.y,s.w,s.h);else{ctx.fillStyle='rgba(128,128,128,.25)';ctx.fillRect(s.x,s.y,s.w,s.h);}}
+  else if(s.type==='text'){
+    ctx.fillStyle=s.c;ctx.font=tfont(s.size);ctx.textBaseline='top';const lh=s.size*1.25;
+    s.text.split('\n').forEach((l,i)=>ctx.fillText(l,s.x,s.y+i*lh+(lh-s.size)/2));
+  }
+  else if(s.type==='line'){ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();}
+  else if(s.type==='circle'){
+    if(s.fill){
+      if(s.div>=2){for(let k=0;k<s.div;k++){const a=-Math.PI/2+k*TAU/s.div;ctx.beginPath();ctx.moveTo(s.cx,s.cy);ctx.arc(s.cx,s.cy,s.r,a,a+TAU/s.div);ctx.closePath();ctx.fillStyle=rgba(s.c,k%2?.3:.1);ctx.fill();}}
+      else{ctx.beginPath();ctx.arc(s.cx,s.cy,s.r,0,TAU);ctx.fillStyle=rgba(s.c,.15);ctx.fill();}
+    }
+    ctx.beginPath();ctx.arc(s.cx,s.cy,s.r,0,TAU);ctx.stroke();
+    if(s.div>=2){ctx.lineWidth=Math.max(2,s.lw*.7);for(let k=0;k<s.div;k++){const a=-Math.PI/2+k*TAU/s.div;ctx.beginPath();ctx.moveTo(s.cx,s.cy);ctx.lineTo(s.cx+s.r*Math.cos(a),s.cy+s.r*Math.sin(a));ctx.stroke();}}
+    if(s.showR){ctx.lineWidth=Math.max(2,s.lw*.8);ctx.beginPath();ctx.moveTo(s.cx,s.cy);ctx.lineTo(s.cx+s.r,s.cy);ctx.stroke();}
+    if(s.showC||s.div>=2||s.showR)dot(ctx,s.cx,s.cy,Math.max(4,s.lw*1.1),s.c);
+  }
+  else if(s.type==='sector')drawSector(ctx,s);
+  ctx.restore();
+}
+function drawSector(ctx,s){
+  const full=Math.abs(s.sweep)>=TAU-1e-6,end=s.a0+s.sweep,ccw=s.sweep<0,{cx,cy,r}=s;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  if(s.dash&&!full){ctx.save();ctx.setLineDash([10,12]);ctx.lineWidth=Math.max(2,s.lw*.5);ctx.strokeStyle=rgba(s.c,.55);ctx.beginPath();ctx.arc(cx,cy,r,0,TAU);ctx.stroke();ctx.restore();}
+  ctx.strokeStyle=s.c;ctx.lineWidth=s.lw;
+  ctx.beginPath();
+  if(full)ctx.arc(cx,cy,r,0,TAU);
+  else{ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(s.a0),cy+r*Math.sin(s.a0));ctx.arc(cx,cy,r,s.a0,end,ccw);ctx.closePath();}
+  if(s.fill){ctx.fillStyle=rgba(s.c,.2);ctx.fill();}
+  ctx.stroke();
+  if(full){ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+r*Math.cos(s.a0),cy+r*Math.sin(s.a0));ctx.stroke();}
+  dot(ctx,cx,cy,Math.max(4,s.lw*1.1),s.c);
+  if(s.lab)drawAngleMark(ctx,s);
+  ctx.restore();
+}
+function drawAngleMark(ctx,s){
+  const deg=sweepDeg(s);if(!deg)return;
+  const {cx,cy}=s,end=s.a0+s.sweep,ccw=s.sweep<0;
+  const ra=Math.max(20,Math.min(52,s.r*.2));
+  ctx.save();ctx.strokeStyle=s.c;ctx.lineWidth=Math.max(2,s.lw*.6);
+  if(deg===90){const k=ra*.75,u=[Math.cos(s.a0),Math.sin(s.a0)],v=[Math.cos(end),Math.sin(end)];
+    ctx.beginPath();ctx.moveTo(cx+k*u[0],cy+k*u[1]);ctx.lineTo(cx+k*(u[0]+v[0]),cy+k*(u[1]+v[1]));ctx.lineTo(cx+k*v[0],cy+k*v[1]);ctx.stroke();}
+  else{ctx.beginPath();ctx.arc(cx,cy,ra,s.a0,end,ccw);ctx.stroke();}
+  const mid=s.a0+s.sweep/2,fs=Math.max(24,Math.min(46,s.r*.14));
+  const dist=ra+fs*(deg<35?1.9:deg<60?1.3:.95);
+  ctx.font=`bold ${fs}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=s.c;
+  ctx.fillText(deg+'°',cx+dist*Math.cos(mid),cy+dist*Math.sin(mid));
+  ctx.restore();
+}
+function bubble(ctx,x,y,txt){
+  ctx.save();ctx.fillStyle='rgba(39,169,154,.9)';ctx.beginPath();ctx.arc(x,y,56,0,TAU);ctx.fill();
+  ctx.fillStyle='#fff';ctx.font=`bold 38px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(txt,x,y+2);ctx.restore();
+}
+function drawRadiusGuide(ctx,g){
+  const c=S.color,ex=g.cx+g.r*Math.cos(g.a0),ey=g.cy+g.r*Math.sin(g.a0);
+  ctx.save();ctx.lineCap='round';
+  ctx.setLineDash([10,12]);ctx.lineWidth=2;ctx.strokeStyle=rgba(c,.55);ctx.beginPath();ctx.arc(g.cx,g.cy,g.r,0,TAU);ctx.stroke();
+  ctx.setLineDash([]);ctx.lineWidth=SLW[S.wi];ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(g.cx,g.cy);ctx.lineTo(ex,ey);ctx.stroke();
+  dot(ctx,g.cx,g.cy,Math.max(5,SLW[S.wi]*1.2),c);
+  ctx.lineWidth=4;ctx.strokeStyle='#27a99a';ctx.beginPath();ctx.arc(ex,ey,16,0,TAU);ctx.stroke();
+  ctx.restore();
+}
+function orderedShapes(list){return[...list.filter(s=>s.type==='img'),...list.filter(s=>s.type!=='img')]}
+
+function renderShapes(){
+  ctxS.clearRect(0,0,W,H);
+  for(const s of orderedShapes(P().shapes))if(!editing||s!==editing.orig)drawShape(ctxS,s);
+  if(selected){
+    const s=selected;ctxS.save();ctxS.setLineDash([8,8]);ctxS.lineWidth=3;ctxS.strokeStyle='#27d3bf';
+    ctxS.beginPath();
+    if(s.type==='line'){ctxS.lineWidth=s.lw+14;ctxS.strokeStyle='rgba(39,211,191,.35)';ctxS.setLineDash([]);ctxS.lineCap='round';ctxS.moveTo(s.x1,s.y1);ctxS.lineTo(s.x2,s.y2);ctxS.stroke();}
+    else if(s.type==='img'||s.type==='text'){const b=objBox(s);ctxS.strokeRect(b[0]-8,b[1]-8,b[2]+16,b[3]+16);
+      if(s.type==='img'){ctxS.setLineDash([]);dot(ctxS,s.x+s.w,s.y+s.h,18,'#27d3bf');ctxS.lineWidth=3;ctxS.strokeStyle='#fff';ctxS.beginPath();ctxS.arc(s.x+s.w,s.y+s.h,18,0,TAU);ctxS.stroke();}}
+    else{ctxS.arc(s.cx,s.cy,s.r+12,0,TAU);ctxS.stroke();}
+    ctxS.restore();
+  }
+}
+function renderInk(){ctxI.clearRect(0,0,W,H);for(const it of P().ink)drawInkItem(ctxI,it);}
+function renderAll(doSave=true){renderShapes();renderInk();reqOv();refreshMeta();if(doSave)save();}
+function makeThumb(pg){
+  try{
+    const tw=384,th=216,k=tw/W,c=document.createElement('canvas');c.width=tw;c.height=th;const x=c.getContext('2d');
+    x.scale(k,k);paintBg(x);for(const s of orderedShapes(pg.shapes))drawShape(x,s);
+    const ic=document.createElement('canvas');ic.width=tw;ic.height=th;const ix=ic.getContext('2d');ix.scale(k,k);for(const it of pg.ink)drawInkItem(ix,it);
+    x.setTransform(1,0,0,1,0,0);x.drawImage(ic,0,0);
+    return c.toDataURL('image/jpeg',.72);
+  }catch(_){return'';}
+}
+
+let ovReq=false;
+function reqOv(){if(!ovReq){ovReq=true;requestAnimationFrame(drawOv);}}
+function drawOv(){
+  ovReq=false;const x=ctxO;x.clearRect(0,0,W,H);
+  for(const a of active.values()){
+    if(a.item&&a.item.t!=='er')drawInkItem(x,a.item);
+    if(a.ring){x.save();x.lineWidth=2;x.setLineDash([6,6]);x.strokeStyle='rgba(255,255,255,.95)';x.beginPath();x.arc(a.ring[0],a.ring[1],a.r,0,TAU);x.stroke();x.lineDashOffset=6;x.strokeStyle='rgba(0,0,0,.7)';x.stroke();x.restore();}
+  }
+  const o=shapeOp;
+  if(o){
+    if(o.type==='line')drawShape(x,mkLine(o));
+    else if(o.type==='circle')drawShape(x,mkCircle(o));
+    else if(o.type==='sec1')drawRadiusGuide(x,sec1Geom(o));
+    else if(o.type==='sec2'&&pending){
+      if(!o.sweep)drawRadiusGuide(x,pending);
+      else{
+        const s=mkSector(pending,o.sweep);drawSector(x,s);
+        const mid=s.a0+s.sweep/2,off=Math.min(s.r*.55,130);
+        bubble(x,s.cx-off*Math.cos(mid),s.cy-off*Math.sin(mid),sweepDeg(s)+'°');
+      }
+    }
+  }
+  if(pending&&!(o&&o.type==='sec2'))drawRadiusGuide(x,pending);
+}
+
+/* ================= shape builders ================= */
+function mkLine(o){let x2=o.x,y2=o.y;const len=hyp(x2-o.x0,y2-o.y0),a=snapAng(Math.atan2(y2-o.y0,x2-o.x0));x2=o.x0+len*Math.cos(a);y2=o.y0+len*Math.sin(a);
+  return{type:'line',x1:o.x0,y1:o.y0,x2:r1(x2),y2:r1(y2),c:S.color,lw:SLW[S.wi]}}
+function mkCircle(o){return{type:'circle',cx:o.x0,cy:o.y0,r:r1(hyp(o.x-o.x0,o.y-o.y0)),c:S.color,lw:SLW[S.wi],fill:S.fill,showC:S.cCenter,showR:S.cRadius,div:S.cDiv}}
+function sec1Geom(o){return{cx:o.x0,cy:o.y0,r:hyp(o.x-o.x0,o.y-o.y0),a0:snapAng(Math.atan2(o.y-o.y0,o.x-o.x0))}}
+function mkSector(g,sweep){return{type:'sector',cx:g.cx,cy:g.cy,r:r1(g.r),a0:g.a0,sweep,c:S.color,lw:SLW[S.wi],fill:S.fill,dash:S.showDashed,lab:S.showAngle}}
+
+/* ================= hit tests ================= */
+function bb(it){if(!it.bb){let a=1e9,b=1e9,c=-1e9,d=-1e9;for(const[x,y]of it.p){if(x<a)a=x;if(y<b)b=y;if(x>c)c=x;if(y>d)d=y;}it.bb=[a,b,c,d];}return it.bb}
+function hitStroke(it,x,y,r){
+  const tol=r+it.w/2,B=bb(it);
+  if(x<B[0]-tol||x>B[2]+tol||y<B[1]-tol||y>B[3]+tol)return false;
+  const p=it.p;if(p.length===1)return hyp(x-p[0][0],y-p[0][1])<tol;
+  for(let i=1;i<p.length;i++)if(distSeg(x,y,p[i-1][0],p[i-1][1],p[i][0],p[i][1])<tol)return true;
+  return false;
+}
+function within(s,ang){if(Math.abs(s.sweep)>=TAU-1e-6)return true;let rel=s.sweep>0?ang-s.a0:s.a0-ang;rel=((rel%TAU)+TAU)%TAU;return rel<=Math.abs(s.sweep)+1e-9}
+function inBox(b,x,y,pad){return x>=b[0]-pad&&x<=b[0]+b[2]+pad&&y>=b[1]-pad&&y<=b[1]+b[3]+pad}
+function hitInside(s,x,y){
+  if(s.type==='img'||s.type==='text')return inBox(objBox(s),x,y,8);
+  if(s.type==='line')return distSeg(x,y,s.x1,s.y1,s.x2,s.y2)<s.lw/2+18;
+  const d=hyp(x-s.cx,y-s.cy);if(d>s.r+14)return false;
+  return s.type==='circle'||d<14||within(s,Math.atan2(y-s.cy,x-s.cx));
+}
+function hitOutline(s,x,y,r){
+  if(s.type==='img')return false;
+  if(s.type==='text')return inBox(textBox(s),x,y,r*.5);
+  const tol=r+s.lw/2;
+  if(s.type==='line')return distSeg(x,y,s.x1,s.y1,s.x2,s.y2)<tol;
+  const d=hyp(x-s.cx,y-s.cy);
+  if(s.type==='circle')return Math.abs(d-s.r)<tol;
+  const e=s.a0+s.sweep;
+  return(Math.abs(d-s.r)<tol&&within(s,Math.atan2(y-s.cy,x-s.cx)))
+    ||distSeg(x,y,s.cx,s.cy,s.cx+s.r*Math.cos(s.a0),s.cy+s.r*Math.sin(s.a0))<tol
+    ||distSeg(x,y,s.cx,s.cy,s.cx+s.r*Math.cos(e),s.cy+s.r*Math.sin(e))<tol;
+}
+function topHit(x,y,filter){const o=orderedShapes(P().shapes);for(let i=o.length-1;i>=0;i--){if((!filter||filter(o[i]))&&hitInside(o[i],x,y))return o[i];}return null}
+function eraseObjAt(x,y,r){
+  const p=P();let ch=false;
+  const ink=p.ink.filter(it=>{if(it.t==='er')return true;if(hitStroke(it,x,y,r)){ch=true;return false}return true});
+  const sh=p.shapes.filter(s=>{if(hitOutline(s,x,y,r)){ch=true;return false}return true});
+  if(ch){p.ink=ink;p.shapes=sh;if(selected&&!sh.includes(selected))selected=null;renderShapes();renderInk();}
+  return ch;
+}
+
+/* ================= history ================= */
+function snapshot(){return{shapes:P().shapes.slice(),ink:P().ink.slice()}}
+function pushHist(){const p=P();p.hist.push(snapshot());if(p.hist.length>120)p.hist.shift();p.redo=[];}
+function undo(){commitEditor();const p=P();if(!p.hist.length)return;p.redo.push(snapshot());const s=p.hist.pop();p.shapes=s.shapes;p.ink=s.ink;selected=null;pending=null;renderAll();updateOpts();updateHint();}
+function redo(){commitEditor();const p=P();if(!p.redo.length)return;p.hist.push(snapshot());const s=p.redo.pop();p.shapes=s.shapes;p.ink=s.ink;selected=null;renderAll();updateOpts();}
+
+/* ================= text editor ================= */
+function openEditor(x,y,obj){
+  editing={x:obj?obj.x:x,y:obj?obj.y:y,size:obj?obj.size:S.tsize,c:obj?obj.c:S.color,orig:obj||null};
+  editor.value=obj?obj.text:'';
+  editor.style.color=editing.c;editor.style.caretColor=editing.c;
+  editor.style.display='block';placeEditor();renderShapes();
+  const f=()=>{if(!editing)return;editor.focus();const n=editor.value.length;editor.setSelectionRange(n,n);};
+  f();setTimeout(f,0);
+}
+function placeEditor(){
+  const e=editing;if(!e)return;
+  editor.style.left=e.x*scale+'px';editor.style.top=e.y*scale+'px';editor.style.fontSize=e.size*scale+'px';
+  const lines=editor.value.split('\n');ctxO.save();ctxO.font=tfont(e.size);let w=0;for(const l of lines)w=Math.max(w,ctxO.measureText(l).width);ctxO.restore();
+  editor.style.width=(w+e.size*1.2)*scale+'px';editor.style.height=lines.length*e.size*1.25*scale+'px';
+}
+editor.addEventListener('input',placeEditor);
+editor.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();cancelEditor();}e.stopPropagation();});
+function cancelEditor(){if(!editing)return;editing=null;editor.style.display='none';editor.blur();renderShapes();}
+function commitEditor(){
+  if(!editing)return;
+  const e=editing,t=editor.value.replace(/\s+$/,'');
+  editing=null;editor.style.display='none';editor.blur();
+  if(e.orig){
+    if(t===e.orig.text){renderShapes();return;}
+    pushHist();if(!t){P().shapes=P().shapes.filter(s=>s!==e.orig);if(selected===e.orig)selected=null;}
+    else{const n=replaceShape(e.orig,{...e.orig,text:t});if(selected===e.orig)selected=n;}
+  }else if(t){pushHist();P().shapes.push({type:'text',x:r1(e.x),y:r1(e.y),text:t,size:e.size,c:e.c});}
+  renderAll();updateOpts();
+}
+
+/* ================= images ================= */
+function readAsDataURL(f){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>rej(r.error);r.readAsDataURL(f);})}
+function loadImage(src){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=src;})}
+async function prepImage(f){
+  const src=await readAsDataURL(f),im=await loadImage(src),MAX=2400;
+  let w=im.naturalWidth,h=im.naturalHeight;
+  if(Math.max(w,h)<=MAX&&f.size<4e6)return{src,w,h};
+  const k=Math.min(1,MAX/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);
+  let out=f.type==='image/png'?c.toDataURL('image/png'):'';
+  if(!out||out.length>6e6)out=c.toDataURL('image/jpeg',.88);
+  return{src:out,w,h};
+}
+function makeImgObj(d){
+  const f=Math.min(1,W*.86/d.w,(H-150)*.9/d.h),w=d.w*f,h=d.h*f;
+  return{type:'img',id:uid(),src:d.src,x:r1((W-w)/2),y:r1(Math.max(20,(H-110-h)/2)),w:r1(w),h:r1(h)};
+}
+const pageEmpty=p=>!p.shapes.length&&!p.ink.length;
+async function insertImages(files){
+  const list=[...files].filter(f=>f.type&&f.type.startsWith('image/'));
+  if(!list.length)return;
+  commitEditor();flash('圖片處理中…');
+  const ds=[];for(const f of list){try{ds.push(await prepImage(f));}catch(_){}}
+  if(!ds.length){flash('圖片讀取失敗');return;}
+  if(ds.length===1){
+    pushHist();const o=makeImgObj(ds[0]);P().shapes.push(o);
+    setTool('select');selected=o;renderAll();updateOpts();flash('拖曳移動，拖右下角圓點縮放');
+  }else{
+    let idx=cur;
+    ds.forEach((d,i)=>{
+      if(!(i===0&&pageEmpty(pages[idx]))){pages.splice(idx+1,0,newPage());idx++;}
+      pages[idx].shapes.push(makeImgObj(d));
+    });
+    const first=pageEmpty(P())?cur:cur+1;
+    gotoPage(Math.min(first,pages.length-1));flash(`已加入 ${ds.length} 張圖片，一張一頁`);
+  }
+}
+$('#fImg').addEventListener('change',e=>{insertImages(e.target.files);e.target.value='';});
+document.addEventListener('paste',e=>{
+  if(!home.classList.contains('hide'))return;
+  const files=[...(e.clipboardData?e.clipboardData.items:[])].filter(i=>i.kind==='file'&&i.type.startsWith('image/')).map(i=>i.getAsFile()).filter(Boolean);
+  if(files.length){e.preventDefault();insertImages(files);}
+});
+stage.addEventListener('dragover',e=>e.preventDefault());
+stage.addEventListener('drop',e=>{e.preventDefault();if(e.dataTransfer)insertImages(e.dataTransfer.files);});
+
+/* ================= pointer ================= */
+function pt(e){const r=stage.getBoundingClientRect();return[r1((e.clientX-r.left)/scale),r1((e.clientY-r.top)/scale)]}
+stage.addEventListener('pointerdown',e=>{
+  if(e.target===editor)return;
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  closePop();
+  const [x,y]=pt(e),t=S.tool,id=e.pointerId;
+  if(editing){commitEditor();if(t==='text')return;}
+  try{stage.setPointerCapture(id)}catch(_){}
+  if(t==='pen'||t==='hl'){
+    active.set(id,{item:{t,c:S.color,w:WIDTHS[t][S.wi],p:[[x,y]]}});reqOv();
+  }else if(t==='eraser'){
+    const w=WIDTHS.eraser[S.wi];pushHist();
+    if(S.eraserMode==='pixel'){
+      const it={t:'er',w,p:[[x,y]]};P().ink.push(it);
+      ctxI.save();ctxI.globalCompositeOperation='destination-out';dot(ctxI,x,y,w/2,'#000');ctxI.restore();
+      active.set(id,{er:it,ring:[x,y],r:w/2,last:[x,y]});
+    }else{
+      const a={obj:true,ring:[x,y],r:w/2,last:[x,y],changed:false};active.set(id,a);
+      a.changed=eraseObjAt(x,y,w/2);
+    }
+    reqOv();
+  }else if(t==='text'){
+    e.preventDefault();
+    const hit=topHit(x,y,s=>s.type==='text');
+    if(hit)openEditor(0,0,hit);else openEditor(x,y-S.tsize*.62);
+  }else if(t==='line'||t==='circle'){
+    if(shapeOp)return;shapeOp={pid:id,type:t,x0:x,y0:y,x,y};reqOv();
+  }else if(t==='sector'){
+    if(shapeOp)return;
+    if(!pending)shapeOp={pid:id,type:'sec1',x0:x,y0:y,x,y};
+    else{const ang=Math.atan2(y-pending.cy,x-pending.cx);shapeOp={pid:id,type:'sec2',acc:norm(ang-pending.a0),last:ang,sweep:0};updSweep(shapeOp);}
+    reqOv();
+  }else if(t==='select'){
+    if(shapeOp)return;
+    if(selected&&selected.type==='img'&&hyp(x-selected.x-selected.w,y-selected.y-selected.h)<38){
+      pushHist();selected=replaceShape(selected,{...selected});
+      shapeOp={pid:id,type:'resize',ratio:selected.w/selected.h,moved:false};return;
+    }
+    const hit=topHit(x,y);
+    if(!hit){selected=null;renderShapes();updateOpts();return;}
+    pushHist();selected=replaceShape(hit,{...hit});
+    if(selected.type==='sector')S.angle=sweepDeg(selected);
+    shapeOp={pid:id,type:'move',lx:x,ly:y,moved:false};renderShapes();updateOpts();
+  }
+});
+stage.addEventListener('pointermove',e=>{
+  const id=e.pointerId,a=active.get(id);
+  if(!a&&(!shapeOp||shapeOp.pid!==id))return;
+  const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
+  for(const ev of (evs.length?evs:[e])){
+    const [x,y]=pt(ev);
+    if(a){
+      if(a.item){const p=a.item.p,l=p[p.length-1];if(hyp(x-l[0],y-l[1])>=1.2)p.push([x,y]);}
+      else if(a.er){const l=a.last;if(hyp(x-l[0],y-l[1])>=1.2){a.er.p.push([x,y]);
+        ctxI.save();ctxI.globalCompositeOperation='destination-out';ctxI.lineCap='round';ctxI.lineWidth=a.er.w;ctxI.beginPath();ctxI.moveTo(l[0],l[1]);ctxI.lineTo(x,y);ctxI.stroke();ctxI.restore();a.last=[x,y];}
+        a.ring=[x,y];}
+      else if(a.obj){const l=a.last,d=hyp(x-l[0],y-l[1]),n=Math.max(1,Math.ceil(d/(a.r*.5)));
+        for(let k=1;k<=n;k++){if(eraseObjAt(l[0]+(x-l[0])*k/n,l[1]+(y-l[1])*k/n,a.r))a.changed=true;}
+        a.last=[x,y];a.ring=[x,y];}
+    }else{
+      const o=shapeOp,s=selected;
+      if(o.type==='move'){const dx=x-o.lx,dy=y-o.ly;o.lx=x;o.ly=y;o.moved=true;
+        if(s.type==='line'){s.x1+=dx;s.y1+=dy;s.x2+=dx;s.y2+=dy;}
+        else if(s.type==='img'||s.type==='text'){s.x+=dx;s.y+=dy;}
+        else{s.cx+=dx;s.cy+=dy;}}
+      else if(o.type==='resize'){o.moved=true;s.w=Math.max(60,x-s.x);s.h=s.w/o.ratio;}
+      else if(o.type==='sec2'){const ang=Math.atan2(y-pending.cy,x-pending.cx);o.acc+=norm(ang-o.last);o.last=ang;o.acc=Math.max(-TAU,Math.min(TAU,o.acc));updSweep(o);}
+      else{o.x=x;o.y=y;}
+    }
+  }
+  if(shapeOp&&(shapeOp.type==='move'||shapeOp.type==='resize')&&shapeOp.pid===id)renderShapes();
+  reqOv();
+});
+function updSweep(o){const st=S.snap,d=o.acc*180/Math.PI;let s=Math.round(d/st)*st;s=Math.max(-360,Math.min(360,s));o.sweep=s*Math.PI/180;}
+function endPointer(e){
+  const id=e.pointerId,a=active.get(id);
+  if(a){
+    active.delete(id);
+    if(a.item){pushHist();P().ink.push(a.item);drawInkItem(ctxI,a.item);refreshMeta();save();}
+    else if(a.er){refreshMeta();save();}
+    else if(a.obj){if(!a.changed)P().hist.pop();refreshMeta();save();}
+    reqOv();return;
+  }
+  const o=shapeOp;if(!o||o.pid!==id)return;
+  shapeOp=null;
+  if(o.type==='line'){const s=mkLine(o);if(hyp(s.x2-s.x1,s.y2-s.y1)>=6){pushHist();P().shapes.push(s);renderAll();}}
+  else if(o.type==='circle'){const s=mkCircle(o);if(s.r>=8){pushHist();P().shapes.push(s);renderAll();}}
+  else if(o.type==='sec1'){const g=sec1Geom(o);pending=g.r>=15?g:null;updateHint();}
+  else if(o.type==='sec2'){if(o.sweep){pushHist();P().shapes.push(mkSector(pending,o.sweep));pending=null;renderAll();updateHint();}}
+  else if(o.type==='move'||o.type==='resize'){if(!o.moved)P().hist.pop();renderAll();}
+  reqOv();
+}
+stage.addEventListener('pointerup',endPointer);
+stage.addEventListener('pointercancel',endPointer);
+stage.addEventListener('contextmenu',e=>e.preventDefault());
+document.addEventListener('gesturestart',e=>e.preventDefault());
+
+/* ================= angle apply ================= */
+function applyAngle(){
+  const deg=Math.max(1,Math.min(360,S.angle)),rad=deg*Math.PI/180;
+  if(S.tool==='sector'&&pending){pushHist();P().shapes.push(mkSector(pending,-rad));pending=null;renderAll();updateHint();return;}
+  if(selected&&selected.type==='sector'){
+    pushHist();selected=replaceShape(selected,{...selected,sweep:(selected.sweep<0?-1:1)*rad});renderAll();updateOpts();return;
+  }
+  flash(S.tool==='sector'?'先拉出第一條半徑，再按角度':'先點一個扇形');
+}
+
+/* ================= toolbar UI ================= */
+const colorsEl=$('#colors'),widthsEl=$('#widths');
+colorsEl.innerHTML=COLORS.map(c=>`<button class="sw" data-c="${c}" style="background:${c}"></button>`).join('');
+widthsEl.innerHTML=[6,11,18].map((d,i)=>`<button class="wd" data-w="${i}"><i style="width:${d}px;height:${d}px"></i></button>`).join('');
+
+bar.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.tool)setTool(b.dataset.tool);
+  else if(b.dataset.c){
+    S.color=b.dataset.c;
+    if(editing){editing.c=S.color;editor.style.color=editor.style.caretColor=S.color;editor.focus();}
+    else if(selected&&selected.type!=='img'){pushHist();selected=replaceShape(selected,{...selected,c:S.color});renderAll();}
+    else if(S.tool==='eraser'||S.tool==='select')setTool('pen');
+    refreshUI();
+  }
+  else if(b.dataset.w){S.wi=+b.dataset.w;refreshUI();}
+  else switch(b.id){
+    case'bHome':goHome();break;
+    case'bCloud':cloudButton();break;
+    case'bImg':$('#fImg').click();break;
+    case'bUndo':undo();break;
+    case'bRedo':redo();break;
+    case'bClear':togglePop('clear');break;
+    case'bBg':togglePop('bg');break;
+    case'bPrev':if(cur>0)gotoPage(cur-1);break;
+    case'bNext':if(cur<pages.length-1)gotoPage(cur+1);break;
+    case'bAdd':togglePop('page');break;
+    case'bFull':toggleFull();break;
+    case'bAlign':S.align={center:'left',left:'right',right:'center'}[S.align];applyAlign();try{localStorage.setItem('mathboard-align',S.align)}catch(_){}break;
+    case'bMin':bar.classList.toggle('min');updateOpts();closePop();fitDock();break;
+  }
+});
+function applyAlign(){dock.className=S.align==='center'?'':'al-'+S.align;fitDock();}
+function setTool(t){
+  commitEditor();
+  if(t!==S.tool){pending=null;shapeOp=null;if(selected){selected=null;renderShapes();}}
+  S.tool=t;refreshUI();reqOv();
+}
+function gotoPage(i){commitEditor();cur=i;pending=null;shapeOp=null;selected=null;active.clear();renderAll();updateOpts();updateHint();}
+function refreshMeta(){
+  $('#bUndo').disabled=!P().hist.length;$('#bRedo').disabled=!P().redo.length;
+  $('#pg').textContent=`${cur+1} / ${pages.length}`;
+  $('#bPrev').disabled=cur===0;$('#bNext').disabled=cur===pages.length-1;
+}
+function refreshUI(){
+  bar.querySelectorAll('[data-tool]').forEach(b=>b.classList.toggle('on',b.dataset.tool===S.tool));
+  colorsEl.querySelectorAll('.sw').forEach(b=>b.classList.toggle('on',b.dataset.c===S.color));
+  widthsEl.querySelectorAll('.wd').forEach(b=>b.classList.toggle('on',+b.dataset.w===S.wi));
+  $('#bname').textContent=boardName;
+  refreshMeta();updateOpts();updateHint();
+}
+
+const seg=(label,key,vals,fmt)=>`<div class="og"><span class="ol">${label}</span>${vals.map(v=>`<button class="ob ${S[key]===v?'on':''}" data-set="${key}" data-val="${v}">${fmt?fmt(v):v}</button>`).join('')}</div>`;
+const tog=(label,key)=>`<button class="ob ${S[key]?'on':''}" data-tog="${key}">${label}</button>`;
+const TSZ_NAME={36:'小',54:'中',80:'大',120:'特大'};
+const angleGroup=()=>`<div class="og"><span class="ol">圓心角</span><button class="ob" data-act="adec">−</button><span class="angv">${S.angle}°</span><button class="ob" data-act="ainc">＋</button><button class="ob pri" data-act="aapply">套用</button></div><div class="og">${[30,45,60,90,120,180,270,360].map(v=>`<button class="ob sm" data-act="aset" data-val="${v}">${v}°</button>`).join('')}</div>`;
+function updateOpts(){
+  let h='';const t=S.tool;
+  if(bar.classList.contains('min')){opts.classList.remove('show');return;}
+  if(t==='eraser')h=seg('模式','eraserMode',['pixel','object'],v=>v==='pixel'?'局部擦':'整筆擦')+`<span class="note">${S.eraserMode==='pixel'?'只擦手寫筆跡，不會擦到圖形、文字和圖片':'碰到就整個刪除（筆跡、圖形、文字），圖片不受影響'}</span>`;
+  else if(t==='text')h=seg('字級','tsize',TSIZES,v=>TSZ_NAME[v])+`<span class="note">點黑板開始打字，點旁邊空白處完成；點已有的文字可以修改</span>`;
+  else if(t==='sector')h=seg('吸附','snap',[1,5,15],v=>v+'°')+`<div class="og">${tog('角度標示','showAngle')}${tog('虛線圓','showDashed')}${tog('填色','fill')}</div>`+angleGroup();
+  else if(t==='circle')h=`<div class="og">${tog('圓心','cCenter')}${tog('半徑線','cRadius')}${tog('填色','fill')}</div>`+seg('等分','cDiv',[0,2,3,4,6,8,12,16],v=>v||'無');
+  else if(t==='select'){
+    if(selected){
+      h=`<button class="ob danger" data-act="del">刪除</button>`;
+      if(selected.type==='sector')h+=angleGroup();
+      if(selected.type==='text')h+=`<button class="ob" data-act="tedit">修改文字</button><div class="og"><span class="ol">字級</span>${TSIZES.map(v=>`<button class="ob ${selected.size===v?'on':''}" data-act="tsz" data-val="${v}">${TSZ_NAME[v]}</button>`).join('')}</div>`;
+      if(selected.type==='img')h+=`<button class="ob" data-act="ifit">放大到整頁</button><span class="note">拖曳移動，拖右下角圓點縮放</span>`;
+      else h+=`<span class="note">拖曳移動；點色票換顏色</span>`;
+    }else h=`<span class="note">點一下圖片、文字、圓、扇形或直線來選取</span>`;
+  }
+  opts.innerHTML=h;opts.classList.toggle('show',!!h);fitDock();
+}
+opts.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+  if(d.set){const v=isNaN(+d.val)?d.val:+d.val;S[d.set]=v;if(d.set==='tsize'&&editing){editing.size=v;placeEditor();editor.focus();}}
+  else if(d.tog){S[d.tog]=!S[d.tog];}
+  else if(d.act==='adec'){S.angle=Math.max(1,S.angle-S.snap);}
+  else if(d.act==='ainc'){S.angle=Math.min(360,S.angle+S.snap);}
+  else if(d.act==='aset'){S.angle=+d.val;if(pending||(selected&&selected.type==='sector'))applyAngle();}
+  else if(d.act==='aapply'){applyAngle();}
+  else if(d.act==='del'&&selected){pushHist();P().shapes=P().shapes.filter(s=>s!==selected);selected=null;renderAll();}
+  else if(d.act==='tedit'&&selected){const s=selected;selected=null;openEditor(0,0,s);}
+  else if(d.act==='tsz'&&selected){pushHist();selected=replaceShape(selected,{...selected,size:+d.val});renderAll();}
+  else if(d.act==='ifit'&&selected){pushHist();const s=selected,k=Math.min(W/s.w,(H-110)/s.h);const w=s.w*k,h=s.h*k;
+    selected=replaceShape(s,{...s,w:r1(w),h:r1(h),x:r1((W-w)/2),y:r1(Math.max(0,(H-110-h)/2))});renderAll();}
+  updateOpts();
+});
+
+let popKind=null;
+function togglePop(k){if(popKind===k){closePop();return;}popKind=k;
+  if(k==='clear')pop.innerHTML=`<button class="ob" data-p="ink">清除手寫（保留圖片、文字、圖形）</button><button class="ob danger" data-p="all">這頁全部清除</button><span class="note">清錯了可以按復原</span>`;
+  else if(k==='page')pop.innerHTML=`<button class="ob" data-p="add">在後面加空白頁</button><button class="ob" data-p="dup">複製這一頁</button><button class="ob" data-p="left">往前移</button><button class="ob" data-p="right">往後移</button>${pages.length>1?`<button class="ob danger" data-p="delpage">刪除這一頁</button>`:''}`;
+  else pop.innerHTML=Object.entries(BGS).map(([k,b])=>`<button class="bgo ${S.bg===k?'on':''}" data-bg="${k}" style="background:${b.c};color:${b.dark?'#fff':'#222'};${b.grid?`background-image:linear-gradient(${b.dark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)'} 1px,transparent 1px),linear-gradient(90deg,${b.dark?'rgba(255,255,255,.2)':'rgba(0,0,0,.15)'} 1px,transparent 1px);background-size:12px 12px`:''}">${b.name}</button>`).join('');
+  pop.classList.add('show');fitDock();}
+function closePop(){popKind=null;pop.classList.remove('show');}
+pop.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;const p=b.dataset.p;
+  commitEditor();
+  if(p==='ink'){pushHist();P().ink=[];renderAll();}
+  else if(p==='all'){pushHist();P().ink=[];P().shapes=[];selected=null;pending=null;renderAll();updateOpts();updateHint();}
+  else if(p==='add'){pages.splice(cur+1,0,newPage());gotoPage(cur+1);}
+  else if(p==='dup'){const s=P();pages.splice(cur+1,0,{shapes:s.shapes.map(x=>({...x})),ink:s.ink.map(x=>({t:x.t,c:x.c,w:x.w,p:x.p})),hist:[],redo:[]});gotoPage(cur+1);}
+  else if(p==='left'&&cur>0){[pages[cur-1],pages[cur]]=[pages[cur],pages[cur-1]];gotoPage(cur-1);}
+  else if(p==='right'&&cur<pages.length-1){[pages[cur+1],pages[cur]]=[pages[cur],pages[cur+1]];gotoPage(cur+1);}
+  else if(p==='delpage'){pages.splice(cur,1);gotoPage(Math.min(cur,pages.length-1));}
+  else if(b.dataset.bg){
+    S.bg=b.dataset.bg;applyBg();
+    if(!isDark()&&S.color==='#ffffff')S.color='#1b1b1b';
+    if(isDark()&&S.color==='#1b1b1b')S.color='#ffffff';
+    refreshUI();save();
+  }
+  closePop();
+});
+
+let flashT=null;
+function updateHint(){
+  if(flashT)return;
+  let h='';
+  if(S.tool==='sector')h=pending?'② 拖曳旋轉，畫出圓心角（也可以直接按下方角度）<button data-x>取消</button>':'① 從圓心按住，拉出第一條半徑';
+  else if(S.tool==='circle')h='從圓心按住拖曳，決定半徑';
+  else if(S.tool==='line')h='按住拖曳畫直線（接近水平、垂直時會自動對齊）';
+  hint.innerHTML=h;hint.classList.toggle('show',!!h&&home.classList.contains('hide'));
+}
+function flash(m){clearTimeout(flashT);hint.innerHTML=m;hint.classList.add('show');flashT=setTimeout(()=>{flashT=null;updateHint();},2400);}
+hint.addEventListener('click',e=>{if(e.target.closest('[data-x]')){pending=null;updateHint();reqOv();}});
+
+function toggleFull(){
+  try{
+    if(document.fullscreenElement)document.exitFullscreen();
+    else{const r=document.documentElement.requestFullscreen();if(r&&r.catch)r.catch(()=>flash('這個環境不允許全螢幕，可以按 F11'));}
+  }catch(_){flash('這個環境不允許全螢幕，可以按 F11');}
+}
+
+/* ================= keyboard ================= */
+addEventListener('keydown',e=>{
+  if(!home.classList.contains('hide')||$('#modal').classList.contains('show'))return;
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;
+  const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo();}
+  else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo();}
+  else if(k==='escape'){pending=null;shapeOp=null;updateHint();reqOv();}
+  else if((k==='delete'||k==='backspace')&&selected){pushHist();P().shapes=P().shapes.filter(s=>s!==selected);selected=null;renderAll();updateOpts();}
+  else if(['arrowright','pagedown','arrowdown',' '].includes(k)){e.preventDefault();if(cur<pages.length-1)gotoPage(cur+1);}
+  else if(['arrowleft','pageup','arrowup'].includes(k)){e.preventDefault();if(cur>0)gotoPage(cur-1);}
+});
+
+/* ================= Google Drive sync ================= */
+const CLIENT_ID=((window.MATHBOARD_CONFIG||{}).googleClientId||'').trim();
+const SCOPE='https://www.googleapis.com/auth/drive.file';
+const DAPI='https://www.googleapis.com/drive/v3',UAPI='https://www.googleapis.com/upload/drive/v3';
+const Cloud={
+  token:null,exp:0,email:'',folderId:null,state:'off',msg:'',pushT:new Map(),syncing:null,_gis:null,
+  get configured(){return !!CLIENT_ID&&/^https?:$/.test(location.protocol)},
+  get remembered(){try{return localStorage.getItem('mathboard-acct')||''}catch(_){return''}},
+  get live(){return !!this.token&&Date.now()<this.exp-60000},
+  restore(){try{const t=JSON.parse(sessionStorage.getItem('mathboard-tok')||'null');if(t&&t[1]>Date.now()+60000){this.token=t[0];this.exp=t[1];}}catch(_){}},
+  loadGis(){
+    if(this._gis)return this._gis;
+    this._gis=new Promise((res,rej)=>{
+      if(window.google&&google.accounts&&google.accounts.oauth2)return res();
+      const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
+      s.onload=()=>res();s.onerror=()=>{this._gis=null;rej(new Error('gis'));};document.head.appendChild(s);
+    });
+    return this._gis;
+  },
+  async getToken(interactive){
+    if(this.live)return true;
+    if(!interactive||!this.configured)return false;
+    try{await this.loadGis();}catch(_){setCloud('err','連不到 Google，請檢查網路');return false;}
+    return new Promise(res=>{
+      let doneFlag=false;const done=v=>{if(!doneFlag){doneFlag=true;res(v);}};
+      const c=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPE,
+        callback:r=>{
+          if(r&&r.access_token){this.token=r.access_token;this.exp=Date.now()+(+r.expires_in||3600)*1000;
+            try{sessionStorage.setItem('mathboard-tok',JSON.stringify([this.token,this.exp]))}catch(_){}
+            done(true);}else done(false);
+        },
+        error_callback:()=>done(false)});
+      const opt={prompt:this.remembered?'':'consent'};if(this.remembered)opt.login_hint=this.remembered;
+      c.requestAccessToken(opt);
+    });
+  },
+  async req(url,opt={},raw=false){
+    if(!this.live){const e=new Error('auth');e.auth=true;throw e;}
+    const r=await fetch(url,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+this.token}});
+    if(r.status===401){this.token=null;const e=new Error('auth');e.auth=true;throw e;}
+    if(!r.ok){const e=new Error('http '+r.status);e.status=r.status;throw e;}
+    return raw?r:r.json();
+  },
+  async whoami(){
+    const j=await this.req(`${DAPI}/about?fields=user(emailAddress)`);
+    this.email=j.user.emailAddress;try{localStorage.setItem('mathboard-acct',this.email)}catch(_){}
+    return this.email;
+  },
+  async folder(){
+    if(this.folderId)return this.folderId;
+    const q=encodeURIComponent("appProperties has { key='mathboard' and value='folder' } and trashed = false");
+    const j=await this.req(`${DAPI}/files?q=${q}&spaces=drive&fields=files(id)`);
+    if(j.files&&j.files.length)return this.folderId=j.files[0].id;
+    const f=await this.req(`${DAPI}/files?fields=id`,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({name:'數學電子白板',mimeType:'application/vnd.google-apps.folder',appProperties:{mathboard:'folder'}})});
+    return this.folderId=f.id;
+  },
+  async list(){
+    const q=encodeURIComponent("appProperties has { key='mathboard' and value='1' } and trashed = false");
+    let out=[],pt='';
+    do{
+      const j=await this.req(`${DAPI}/files?q=${q}&spaces=drive&pageSize=200&fields=nextPageToken,files(id,name,modifiedTime,appProperties)${pt?'&pageToken='+encodeURIComponent(pt):''}`);
+      out=out.concat(j.files||[]);pt=j.nextPageToken||'';
+    }while(pt);
+    return out;
+  },
+  async upload(driveId,meta,body){
+    const md={name:meta.name,mimeType:'application/json',appProperties:{mathboard:'1',pages:String(meta.pageCount||1)}};
+    if(meta.thumb&&meta.thumb.startsWith('data:image/jpeg'))
+      md.contentHints={thumbnail:{image:meta.thumb.split(',')[1].replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,''),mimeType:'image/jpeg'}};
+    if(!driveId)md.parents=[await this.folder()];
+    const url=driveId?`${UAPI}/files/${driveId}?uploadType=resumable&fields=id,modifiedTime`:`${UAPI}/files?uploadType=resumable&fields=id,modifiedTime`;
+    const r=await this.req(url,{method:driveId?'PATCH':'POST',headers:{'Content-Type':'application/json; charset=UTF-8','X-Upload-Content-Type':'application/json'},body:JSON.stringify(md)},true);
+    const loc=r.headers.get('Location');if(!loc)throw new Error('沒有取得上傳位址');
+    const r2=await fetch(loc,{method:'PUT',headers:{'Content-Type':'application/json'},body});
+    if(!r2.ok)throw new Error('上傳失敗 '+r2.status);
+    let j=await r2.json();
+    if(!j.modifiedTime)j=await this.req(`${DAPI}/files/${j.id}?fields=id,modifiedTime`);
+    return j;
+  },
+  download(id){return this.req(`${DAPI}/files/${id}?alt=media`)},
+  trash(id){return this.req(`${DAPI}/files/${id}?fields=id`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({trashed:true})})},
+  schedulePush(id,delay=3000){
+    if(!this.email)return;
+    if(this.state!=='auth'&&this.state!=='busy')setCloud('dirty');
+    clearTimeout(this.pushT.get(id));
+    this.pushT.set(id,setTimeout(()=>{this.pushT.delete(id);queuePush(id);},delay));
+  }
+};
+function setCloud(state,msg=''){Cloud.state=state;Cloud.msg=msg;renderCloudUI();}
+const pushQ=new Map();
+function queuePush(id){const p=(pushQ.get(id)||Promise.resolve()).then(()=>pushBoard(id));pushQ.set(id,p.catch(()=>{}));return p;}
+function flushPush(id){
+  if(Cloud.pushT.has(id)){clearTimeout(Cloud.pushT.get(id));Cloud.pushT.delete(id);return queuePush(id);}
+  return pushQ.get(id)||Promise.resolve();
+}
+async function pushBoard(id){
+  if(!Cloud.email)return false;
+  if(!Cloud.live){setCloud('auth');return false;}
+  const m=await Store.get('meta',id);
+  if(!m||m.conflict||m.remoteOnly||(m.driveAcct&&m.driveAcct!==Cloud.email))return false;
+  const d=await Store.get('data',id);if(!d)return false;
+  setCloud('busy');
+  try{
+    const stamp=m.updated,body=JSON.stringify({format:'mathboard',v:2,name:m.name,bg:d.bg,pages:d.pages});
+    let j;
+    try{j=await Cloud.upload(m.driveId,m,body);}
+    catch(e){if(e.status===404&&m.driveId)j=await Cloud.upload(null,m,body);else throw e;}
+    const m2=await Store.get('meta',id)||m;
+    Object.assign(m2,{driveId:j.id,driveTime:j.modifiedTime,remoteTime:j.modifiedTime,driveAcct:Cloud.email,remoteNewer:false,conflict:false});
+    if(m2.updated===stamp)m2.dirty=false;
+    await Store.put('meta',m2);
+    setCloud(m2.dirty?'dirty':'ok');return true;
+  }catch(e){setCloud(e.auth?'auth':'err',e.auth?'':e.message);return false;}
+}
+async function syncAll(){
+  if(Cloud.syncing)return Cloud.syncing;
+  Cloud.syncing=(async()=>{
+    if(!Cloud.live){if(Cloud.email||Cloud.remembered)setCloud('auth');return false;}
+    setCloud('busy');
+    try{
+      if(!Cloud.email)await Cloud.whoami();
+      let pend=[];try{pend=JSON.parse(localStorage.getItem('mathboard-trash')||'[]')}catch(_){}
+      const left=[];
+      for(const t of pend){
+        if(t.acct!==Cloud.email){left.push(t);continue;}
+        try{await Cloud.trash(t.id);}catch(e){if(e.auth)throw e;if(e.status!==404)left.push(t);}
+      }
+      try{localStorage.setItem('mathboard-trash',JSON.stringify(left))}catch(_){}
+      const trashIds=new Set(left.map(t=>t.id));
+      const files=await Cloud.list();
+      const metas=await Store.all('meta')||[];
+      const mine=metas.filter(m=>m.driveId&&m.driveAcct===Cloud.email);
+      const byDrive=new Map(mine.map(m=>[m.driveId,m]));
+      const seen=new Set();
+      for(const f of files){
+        if(trashIds.has(f.id))continue;
+        seen.add(f.id);
+        const pc=+((f.appProperties||{}).pages)||1,m=byDrive.get(f.id);
+        if(!m){
+          await Store.put('meta',{id:uid(),name:f.name,updated:Date.parse(f.modifiedTime),pageCount:pc,thumb:'',driveId:f.id,driveAcct:Cloud.email,driveTime:f.modifiedTime,remoteTime:f.modifiedTime,remoteOnly:true,dirty:false});
+        }else if(f.modifiedTime!==m.driveTime){
+          m.remoteTime=f.modifiedTime;
+          if(m.dirty&&!m.remoteOnly)m.conflict=true;
+          else{m.remoteNewer=true;m.name=f.name;m.updated=Date.parse(f.modifiedTime);m.pageCount=pc;}
+          await Store.put('meta',m);
+        }
+      }
+      for(const m of mine){
+        if(seen.has(m.driveId))continue;
+        if(m.dirty&&!m.remoteOnly){m.driveId=null;m.conflict=false;m.remoteNewer=false;await Store.put('meta',m);}
+        else if(m.id!==boardId){await Store.del('meta',m.id);await Store.del('data',m.id);}
+      }
+      for(const m of (await Store.all('meta')||[])){
+        if(m.driveAcct&&m.driveAcct!==Cloud.email)continue;
+        if(m.conflict||m.remoteOnly||m.remoteNewer)continue;
+        if(!m.driveId||m.dirty)await pushBoard(m.id);
+      }
+      if(Cloud.state==='busy'||Cloud.state==='ok')setCloud('ok');
+      return true;
+    }catch(e){setCloud(e.auth?'auth':'err',e.auth?'':e.message);return false;}
+  })();
+  try{return await Cloud.syncing;}finally{Cloud.syncing=null;}
+}
+function renderCloudUI(){
+  const cb=$('#cloudBar'),bc=$('#bCloud');
+  if(!Cloud.configured){
+    cb.innerHTML=CLIENT_ID?`<span class="cnote">用檔案直接開啟時不能雲端同步，請改用網址開啟（GitHub Pages）。</span>`:`<span class="cnote">雲端同步還沒設定，黑板只存在這台電腦。設定方式見說明文件。</span>`;
+  }else if(!Cloud.email&&!Cloud.live){
+    cb.innerHTML=`<button class="hb pri" id="cLogin">${Cloud.remembered?'重新連線 Google 雲端硬碟':'用 Google 帳號登入，同步到雲端硬碟'}</button>${Cloud.remembered?`<span class="cnote">上次登入：${esc(Cloud.remembered)}</span>`:'<span class="cnote">沒登入也能用，只是黑板只存在這台電腦</span>'}`;
+  }else{
+    const st={ok:'已同步',busy:'同步中…',dirty:'等待同步',auth:'連線逾時，請按「重新連線」',err:'同步失敗'+(Cloud.msg?'：'+esc(Cloud.msg):'')}[Cloud.state]||'';
+    cb.innerHTML=`<span class="cdot ${Cloud.state}"></span><span class="cacct">${esc(Cloud.email||Cloud.remembered)}</span><span class="cnote">${st}</span>${(!Cloud.live||Cloud.state==='auth')?'<button class="hb pri" id="cReconnect">重新連線</button>':'<button class="hb" id="cSync">立即同步</button>'}<button class="hb" id="cLogout">登出</button>`;
+  }
+  if(!Cloud.configured||(!Cloud.email&&!Cloud.remembered)){bc.style.display='none';}
+  else{
+    bc.style.display='';
+    bc.querySelector('small').textContent={ok:'已同步',busy:'同步中',dirty:'待同步',auth:'按我連線',err:'未同步'}[Cloud.state]||'雲端';
+    bc.className='btn cs-'+Cloud.state;
+  }
+}
+async function cloudButton(){
+  if(!boardId)return;
+  if(!Cloud.live&&!(await Cloud.getToken(true))){flash('沒有完成 Google 登入，內容仍存在這台電腦');return;}
+  if(!Cloud.email){await syncAll();return;}
+  await flushSave();await queuePush(boardId);
+  flash(Cloud.state==='ok'?'已同步到雲端硬碟':'同步失敗，內容仍存在這台電腦');
+}
+$('#cloudBar').addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.id==='cLogin'||b.id==='cReconnect'){
+    if(await Cloud.getToken(true)){showWarn('');await syncAll();renderHome(false);}
+    else showWarn('沒有完成 Google 登入。如果登入視窗沒有出現，請允許這個網站開啟彈出式視窗。');
+  }
+  else if(b.id==='cSync'){await syncAll();renderHome(false);}
+  else if(b.id==='cLogout')logout();
+});
+async function logout(){
+  const c=await choose('要登出嗎？<br><span class="note">如果這是學校或教室的共用電腦，請選「登出並清除」。雲端硬碟裡的黑板不受影響。</span>',
+    [{label:'只登出',val:'keep'},{label:'登出並清除這台電腦的黑板',val:'wipe',cls:'danger'}]);
+  if(!c)return;
+  if(c==='wipe'){
+    if(Cloud.live)await syncAll();
+    const metas=await Store.all('meta')||[];
+    const uns=metas.filter(m=>m.dirty||m.conflict||!m.driveId);
+    if(uns.length){
+      const ok=await choose(`有 ${uns.length} 塊黑板還沒同步到雲端（${uns.map(m=>esc(m.name)).join('、')}），清除後就找不回來。確定要清除嗎？`,[{label:'確定清除',val:'y',cls:'danger'}]);
+      if(!ok)return;
+    }
+    for(const m of metas){await Store.del('meta',m.id);await Store.del('data',m.id);}
+    try{if(Cloud.token&&window.google&&google.accounts)google.accounts.oauth2.revoke(Cloud.token,()=>{});}catch(_){}
+  }
+  Cloud.token=null;Cloud.exp=0;Cloud.email='';Cloud.folderId=null;
+  try{localStorage.removeItem('mathboard-acct');sessionStorage.removeItem('mathboard-tok');}catch(_){}
+  setCloud('off');renderHome(false);
+  if(c==='wipe')showWarn('已登出並清除。共用電腦請記得也到 Google 網站登出你的帳號，或直接關閉無痕視窗。');
+}
+
+/* ================= home ================= */
+const grid=$('#grid');
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function fmtTime(t){const d=new Date(t),p=n=>String(n).padStart(2,'0');return`${d.getMonth()+1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`}
+async function renderHome(doSync=true){
+  renderCloudUI();
+  let list=[];try{list=await Store.all('meta')||[];}catch(_){}
+  list.sort((a,b)=>b.updated-a.updated);
+  if(!list.length)grid.innerHTML=`<div class="empty">還沒有黑板。在上面輸入名稱，按「建立新黑板」開始備課。</div>`;
+  else grid.innerHTML=list.map(m=>{
+    const tags=(m.remoteOnly?'<span class="tag cloud">在雲端</span>':'')+(m.conflict?'<span class="tag conf">兩邊都改過</span>':'')+(Cloud.email&&m.dirty&&!m.conflict?'<span class="tag dirty">未同步</span>':'');
+    return`<div class="card" data-id="${m.id}">${m.thumb?`<img class="thumb" src="${m.thumb}" alt="">`:`<div class="thumb"></div>`}<div class="cbody"><div class="cname">${esc(m.name)}</div><div class="cmeta">${m.pageCount||1} 頁 · ${fmtTime(m.updated)}${tags}</div><div class="cact"><button data-a="rename">改名</button><button data-a="dup">複製</button><button data-a="export">匯出檔案</button><button data-a="del" class="del">刪除</button></div></div></div>`;
+  }).join('');
+  if(doSync&&Cloud.live){const ok=await syncAll();if(ok&&!home.classList.contains('hide'))renderHome(false);}
+}
+grid.addEventListener('click',async e=>{
+  const card=e.target.closest('.card');if(!card)return;const id=card.dataset.id;
+  const btn=e.target.closest('button');
+  if(!btn){openBoard(id);return;}
+  const meta=await Store.get('meta',id);if(!meta)return;
+  const a=btn.dataset.a;
+  const needLocal=()=>{if(meta.remoteOnly){showWarn('這塊黑板還在雲端，請先點開一次下載到這台電腦。');return true;}return false;};
+  if(a==='rename'){const n=await ask({title:'新的名稱',value:meta.name});if(n){meta.name=n;meta.dirty=!meta.remoteOnly||meta.dirty;meta.updated=Date.now();if(meta.remoteOnly){showWarn('請先點開這塊黑板，再改名。');return;}await Store.put('meta',meta);queuePush(id);renderHome(false);}}
+  else if(a==='dup'){if(needLocal())return;const d=await Store.get('data',id);const nid=uid();await Store.put('data',{...d,id:nid});
+    await Store.put('meta',{id:nid,name:meta.name+' 副本',updated:Date.now(),pageCount:meta.pageCount,thumb:meta.thumb,dirty:true});queuePush(nid);renderHome(false);}
+  else if(a==='export'){if(needLocal())return;const d=await Store.get('data',id);exportBoard(meta.name,d);}
+  else if(a==='del'){
+    const inCloud=meta.driveId&&meta.driveAcct&&meta.driveAcct===(Cloud.email||Cloud.remembered);
+    const ok=await ask({title:`確定刪除「${esc(meta.name)}」？${inCloud?'<br><span class="note">雲端硬碟裡的檔案會移到垃圾桶，30 天內可以從雲端硬碟救回。</span>':'刪除後無法復原。'}`,input:false,ok:'刪除',danger:true});
+    if(!ok)return;
+    if(inCloud){
+      let trashed=false;
+      if(Cloud.live||await Cloud.getToken(true)){try{await Cloud.trash(meta.driveId);trashed=true;}catch(e){if(e.status===404)trashed=true;}}
+      if(!trashed){try{const l=JSON.parse(localStorage.getItem('mathboard-trash')||'[]');l.push({id:meta.driveId,acct:meta.driveAcct});localStorage.setItem('mathboard-trash',JSON.stringify(l));}catch(_){}}
+    }
+    await Store.del('meta',id);await Store.del('data',id);renderHome(false);
+  }
+});
+async function createBoard(name,data){
+  const id=uid();
+  const d={id,bg:(data&&data.bg)||'green',pages:(data&&data.pages&&data.pages.length)?data.pages:[{shapes:[],ink:[]}]};
+  await Store.put('data',d);
+  await Store.put('meta',{id,name,updated:Date.now(),pageCount:d.pages.length,thumb:'',dirty:true});
+  Cloud.schedulePush(id,500);
+  return id;
+}
+$('#bCreate').addEventListener('click',async()=>{
+  let n=$('#newName').value.trim();
+  if(!n)n=await ask({title:'幫這塊黑板取個名字',value:''});
+  if(!n)return;
+  $('#newName').value='';
+  const id=await createBoard(n);openBoard(id);
+});
+$('#newName').addEventListener('keydown',e=>{if(e.key==='Enter')$('#bCreate').click();});
+$('#bImport').addEventListener('click',()=>$('#fImport').click());
+$('#fImport').addEventListener('change',async e=>{
+  const files=[...e.target.files];e.target.value='';
+  for(const f of files){
+    try{const j=JSON.parse(await f.text());if(j.format!=='mathboard'||!Array.isArray(j.pages))throw 0;
+      await createBoard(j.name||f.name.replace(/\.json$/i,''),j);}
+    catch(_){showWarn(`「${esc(f.name)}」不是這個白板匯出的檔案`);}
+  }
+  renderHome(false);
+});
+async function exportBoard(name,d){
+  const str=JSON.stringify({format:'mathboard',v:2,name,bg:d.bg,pages:d.pages});
+  const fn=name.replace(/[\\/:*?"<>|]/g,'_')+'.json';
+  try{
+    if(window.claude&&typeof window.claude.use==='function'){
+      const dl=await window.claude.use('downloads');
+      if(dl){try{await dl.save({filename:fn,data:str});}catch(err){if(err&&err.code!=='declined')showWarn('這個環境無法下載檔案');}return;}
+    }
+  }catch(_){}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([str],{type:'application/json'}));a.download=fn;document.body.appendChild(a);a.click();a.remove();
+}
+function showWarn(m){const w=$('#warn');w.innerHTML=m;w.classList.toggle('show',!!m);}
+
+let opening=false;
+async function openBoard(id){
+  if(opening)return;opening=true;
+  try{
+    let m=await Store.get('meta',id);if(!m)return;
+    if(Cloud.configured&&Cloud.remembered&&!Cloud.live){
+      if(await Cloud.getToken(true)){await syncAll();m=await Store.get('meta',id);if(!m){renderHome(false);return;}}
+    }
+    if(m.conflict){
+      const c=await choose(`「${esc(m.name)}」在另一台電腦也改過，兩邊內容不一樣。要用哪一份？<br><span class="note">沒選的那一份會被覆蓋。</span>`,
+        [{label:'用這台電腦的',val:'local'},{label:'用雲端硬碟的',val:'cloud',cls:'pri'}]);
+      if(!c)return;
+      if(c==='local'){Object.assign(m,{conflict:false,remoteNewer:false,driveTime:m.remoteTime,dirty:true});await Store.put('meta',m);queuePush(id);}
+      else{m.conflict=false;m.remoteNewer=true;}
+    }
+    if(m.remoteOnly||m.remoteNewer){
+      showWarn('正在從雲端硬碟下載…');
+      try{
+        if(!Cloud.live&&!(await Cloud.getToken(true)))throw new Error('auth');
+        const j=await Cloud.download(m.driveId);
+        await Store.put('data',{id,bg:j.bg||'green',pages:j.pages||[]});
+        Object.assign(m,{remoteOnly:false,remoteNewer:false,conflict:false,dirty:false,driveTime:m.remoteTime||m.driveTime,pageCount:(j.pages||[]).length||1,thumb:''});
+        await Store.put('meta',m);showWarn('');
+      }catch(e){
+        if(m.remoteOnly){showWarn('這塊黑板還沒下載到這台電腦，要連上網路並登入 Google 才能打開。');return;}
+        showWarn('拿不到雲端的最新版本，先打開這台電腦上的版本。');
+      }
+    }
+    const d=await Store.get('data',id);if(!d)return;
+    boardId=id;boardName=m.name;
+    pages=(d.pages||[]).map(p=>({shapes:p.shapes||[],ink:p.ink||[],hist:[],redo:[]}));
+    if(!pages.length)pages=[newPage()];
+    cur=0;S.bg=BGS[d.bg]?d.bg:'green';S.color=isDark()?'#ffffff':'#1b1b1b';
+    selected=null;pending=null;shapeOp=null;active.clear();
+    home.classList.add('hide');dock.style.display='';
+    S.tool='pen';applyAlign();refreshUI();layout();renderCloudUI();
+    if(Cloud.email&&Cloud.state==='busy')setCloud(m.dirty?'dirty':'ok');
+    if(!m.thumb){m.thumb=makeThumb(pages[0]);await Store.put('meta',m);}
+  }finally{opening=false;}
+}
+async function goHome(){
+  commitEditor();await flushSave();
+  const id=boardId;
+  boardId=null;home.classList.remove('hide');dock.style.display='none';hint.classList.remove('show');
+  if(document.fullscreenElement){try{document.exitFullscreen()}catch(_){}}
+  if(id&&Cloud.email)await flushPush(id);
+  renderHome();
+}
+document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave().then(()=>{if(boardId&&Cloud.email)flushPush(boardId);});}});
+
+/* modal */
+function modal({title,input=false,value='',buttons}){
+  const md=$('#modal'),mi=$('#mInput'),mb=$('#mBtns');
+  return new Promise(res=>{
+    $('#mTitle').innerHTML=title;mi.style.display=input?'':'none';mi.value=value;
+    mb.innerHTML=buttons.map((b,i)=>`<button class="hb ${b.cls||''}" data-i="${i}">${b.label}</button>`).join('');
+    md.classList.add('show');if(input)setTimeout(()=>{mi.focus();mi.select();},30);
+    const done=v=>{md.classList.remove('show');mb.onclick=null;mi.onkeydown=null;res(v);};
+    mb.onclick=e=>{const b=e.target.closest('button');if(!b)return;const v=buttons[+b.dataset.i].val;done(v===null?null:{val:v,text:mi.value.trim()});};
+    mi.onkeydown=e=>{if(e.key==='Enter'){done({val:buttons[buttons.length-1].val,text:mi.value.trim()});}if(e.key==='Escape')done(null);};
+  });
+}
+async function ask({title,value='',ok='確定',danger=false,input=true}){
+  const r=await modal({title,input,value,buttons:[{label:'取消',val:null},{label:ok,val:'ok',cls:danger?'danger':'pri'}]});
+  if(!r)return null;return input?r.text:true;
+}
+async function choose(title,buttons){const r=await modal({title,buttons:[{label:'取消',val:null},...buttons]});return r&&r.val;}
+
+/* ================= start ================= */
+async function start(){
+  await Store.open();
+  if(!Store.ok)showWarn('這個瀏覽器不允許儲存資料（可能是無痕模式的限制），請登入 Google 同步，或用「匯出檔案」備份。');
+  try{
+    const old=localStorage.getItem('mathboard-v1');
+    if(old){const d=JSON.parse(old);if(d&&d.pages&&d.pages.some(p=>(p.shapes&&p.shapes.length)||(p.ink&&p.ink.length)))await createBoard('之前的黑板',{bg:d.bg,pages:d.pages});localStorage.removeItem('mathboard-v1');}
+  }catch(_){}
+  dock.style.display='none';
+  if(Cloud.configured){Cloud.restore();Cloud.loadGis().catch(()=>{});}
+  renderHome();
+}
+addEventListener('resize',()=>{if(home.classList.contains('hide'))layout();});
+document.addEventListener('fullscreenchange',()=>setTimeout(()=>{if(home.classList.contains('hide'))layout();},50));
+start();
+})();
+</script>
+</body>
+</html>
