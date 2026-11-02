@@ -86,6 +86,19 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 #modal .note{font-size:16px;color:var(--dim)}
 #bCloud.cs-auth small,#bCloud.cs-err small{color:#ff9d93}
 #bCloud.cs-busy small,#bCloud.cs-dirty small{color:#f0d07a}
+#kp{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
+#kp.show{display:flex}
+.kbox{background:#20262c;border-radius:20px;padding:22px;width:380px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.kt{font-size:18px;color:var(--dim);text-align:center}
+.kdisp{font-size:64px;font-weight:700;text-align:center;margin:6px 0 2px;font-variant-numeric:tabular-nums;min-height:80px}
+.kerr{height:22px;text-align:center;color:#ff8a80;font-size:16px}
+.kgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:8px 0 12px}
+.kgrid button,.kbtm button{height:72px;border:none;border-radius:14px;background:var(--ui2);color:var(--txt);font-size:32px;font-family:inherit;cursor:pointer}
+.kgrid button:active,.kbtm button:active{filter:brightness(1.3)}
+.kgrid .kfn{font-size:22px;background:#2a3038}
+.kbtm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kbtm button{font-size:24px}.kbtm .kok{background:var(--acc);color:#fff;font-weight:700}
+.ob.angv{min-width:110px;font-size:26px;font-weight:700;background:#1b2126;box-shadow:inset 0 0 0 2px #e9a53a}
 #modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
 #modal.show{display:flex}
 #modal .box{background:#20262c;border-radius:16px;padding:24px;width:min(560px,90vw);box-shadow:0 10px 40px rgba(0,0,0,.5)}
@@ -111,20 +124,20 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
     <span id="bname"></span>
     <button class="btn" id="bCloud" style="display:none"><svg viewBox="0 0 24 24"><path d="M7 18h10a4 4 0 0 0 .5-8A6 6 0 0 0 6 9.5 4.3 4.3 0 0 0 7 18z"/></svg><small>雲端</small></button>
     <span class="sep"></span>
-    <button class="btn tool" data-tool="pen"><svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg><small>畫筆</small></button>
     <button class="btn tool" data-tool="hl"><svg viewBox="0 0 24 24"><path d="M9 15l-3-3 9-9 6 6-9 9z"/><path d="M6 12l-2 6 4 0 1-3"/><path d="M3 21h8"/></svg><small>螢光筆</small></button>
+    <button class="btn tool" data-tool="pen"><svg viewBox="0 0 24 24"><path d="M4 20l4-1L19 8l-3-3L5 16z"/><path d="M14 7l3 3"/></svg><small>畫筆</small></button>
     <button class="btn tool" data-tool="eraser"><svg viewBox="0 0 24 24"><path d="M9 20h11"/><path d="M4.5 14.5l9-9 6 6-8.5 8.5H9z"/><path d="M8.5 10.5l6 6"/></svg><small>橡皮擦</small></button>
+    <button class="btn tool" data-tool="select"><svg viewBox="0 0 24 24"><path d="M6 3l13 8-6 1.8L10.5 19z"/></svg><small>選取</small></button>
+    <span class="sep"></span>
+    <span id="colors"></span>
+    <span class="sep"></span>
+    <span id="widths"></span>
     <span class="sep"></span>
     <button class="btn tool" data-tool="text"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2"/><path d="M12 4v16"/><path d="M9 20h6"/></svg><small>文字</small></button>
     <button class="btn tool" data-tool="line"><svg viewBox="0 0 24 24"><path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.4" fill="currentColor"/><circle cx="19" cy="5" r="1.4" fill="currentColor"/></svg><small>直線</small></button>
     <button class="btn tool" data-tool="circle"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg><small>圓</small></button>
     <button class="btn tool" data-tool="sector"><svg viewBox="0 0 24 24"><path d="M5 18H19A14 14 0 0 0 13 6.5Z"/><path d="M9 18A4 4 0 0 0 7.3 14.7"/></svg><small>扇形</small></button>
-    <button class="btn tool" data-tool="select"><svg viewBox="0 0 24 24"><path d="M6 3l13 8-6 1.8L10.5 19z"/></svg><small>選取</small></button>
     <button class="btn" id="bImg"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/></svg><small>圖片</small></button>
-    <span class="sep"></span>
-    <span id="colors"></span>
-    <span class="sep"></span>
-    <span id="widths"></span>
     <span class="sep"></span>
     <button class="btn" id="bUndo"><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-4"/></svg><small>復原</small></button>
     <button class="btn" id="bRedo"><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h4"/></svg><small>重做</small></button>
@@ -157,6 +170,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
   <div id="grid"></div>
 </div>
 
+<div id="kp"><div class="kbox"><div class="kt">輸入圓心角（1～360）</div><div class="kdisp"><span id="kv"></span>°</div><div class="kerr" id="kerr"></div><div class="kgrid"><button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="C" class="kfn">清除</button><button data-k="0">0</button><button data-k="B" class="kfn">⌫</button></div><div class="kbtm"><button data-k="X" class="kcancel">取消</button><button data-k="OK" class="kok">確定</button></div></div></div>
 <div id="modal"><div class="box"><div class="mt" id="mTitle"></div><input id="mInput"><div class="mb" id="mBtns"></div></div></div>
 
 <script src="config.js"></script>
@@ -177,8 +191,14 @@ const TSIZES=[36,54,80,120];
 const BGS={green:{c:'#24503d',grid:0,dark:1,name:'綠板'},white:{c:'#fafaf6',grid:0,dark:0,name:'白板'},greengrid:{c:'#24503d',grid:1,dark:1,name:'綠板方格'},whitegrid:{c:'#fafaf6',grid:1,dark:0,name:'白板方格'}};
 const GRID=60;
 
-const S={tool:'pen',color:'#ffffff',wi:1,eraserMode:'pixel',snap:5,showAngle:true,showDashed:true,fill:true,cCenter:true,cRadius:false,cDiv:0,bg:'green',angle:60,align:'center',tsize:54};
+const S={tool:'pen',color:'#ffffff',wi:1,eraserMode:'pixel',snap:5,showAngle:true,showDashed:true,fill:true,cCenter:true,cRadius:false,cDiv:0,cFillK:0,bg:'green',angle:60,align:'center',tsize:54,stab:2,palm:0};
 try{const a=localStorage.getItem('mathboard-align');if(a)S.align=a;}catch(_){}
+try{const pr=JSON.parse(localStorage.getItem('mathboard-prefs')||'{}');if(pr.stab>=0)S.stab=pr.stab;if(pr.palm>=0)S.palm=pr.palm;}catch(_){}
+function savePrefs(){try{localStorage.setItem('mathboard-prefs',JSON.stringify({stab:S.stab,palm:S.palm}))}catch(_){}}
+const STAB=[0,.45,.65,.8];          // 筆觸穩定：關、低、中、高
+const PALM=[0,80,55,35];            // 防手掌誤觸：接觸面積超過幾 px 視為手掌（關、低、中、高）；4 = 只認觸控筆
+const STAB_NAME=['關','低','中','高'],PALM_NAME=['關','低','中','高','只認觸控筆'];
+const ignored=new Set();let lastTouch=0;
 let pages=[newPage()],cur=0,boardId=null,boardName='';
 const P=()=>pages[cur];
 function newPage(){return{shapes:[],ink:[],hist:[],redo:[]}}
@@ -303,10 +323,11 @@ function drawShape(ctx,s){
   }
   else if(s.type==='line'){ctx.beginPath();ctx.moveTo(s.x1,s.y1);ctx.lineTo(s.x2,s.y2);ctx.stroke();}
   else if(s.type==='circle'){
-    if(s.fill){
-      if(s.div>=2){for(let k=0;k<s.div;k++){const a=-Math.PI/2+k*TAU/s.div;ctx.beginPath();ctx.moveTo(s.cx,s.cy);ctx.arc(s.cx,s.cy,s.r,a,a+TAU/s.div);ctx.closePath();ctx.fillStyle=rgba(s.c,k%2?.3:.1);ctx.fill();}}
-      else{ctx.beginPath();ctx.arc(s.cx,s.cy,s.r,0,TAU);ctx.fillStyle=rgba(s.c,.15);ctx.fill();}
-    }
+    const n=cN(s),fs=cFills(s);ctx.fillStyle=rgba(s.c,.35);
+    for(const k of fs){if(k>=n)continue;ctx.beginPath();
+      if(n===1)ctx.arc(s.cx,s.cy,s.r,0,TAU);
+      else{const a=-Math.PI/2+k*TAU/n;ctx.moveTo(s.cx,s.cy);ctx.arc(s.cx,s.cy,s.r,a,a+TAU/n);ctx.closePath();}
+      ctx.fill();}
     ctx.beginPath();ctx.arc(s.cx,s.cy,s.r,0,TAU);ctx.stroke();
     if(s.div>=2){ctx.lineWidth=Math.max(2,s.lw*.7);for(let k=0;k<s.div;k++){const a=-Math.PI/2+k*TAU/s.div;ctx.beginPath();ctx.moveTo(s.cx,s.cy);ctx.lineTo(s.cx+s.r*Math.cos(a),s.cy+s.r*Math.sin(a));ctx.stroke();}}
     if(s.showR){ctx.lineWidth=Math.max(2,s.lw*.8);ctx.beginPath();ctx.moveTo(s.cx,s.cy);ctx.lineTo(s.cx+s.r,s.cy);ctx.stroke();}
@@ -412,7 +433,11 @@ function drawOv(){
 /* ================= shape builders ================= */
 function mkLine(o){let x2=o.x,y2=o.y;const len=hyp(x2-o.x0,y2-o.y0),a=snapAng(Math.atan2(y2-o.y0,x2-o.x0));x2=o.x0+len*Math.cos(a);y2=o.y0+len*Math.sin(a);
   return{type:'line',x1:o.x0,y1:o.y0,x2:r1(x2),y2:r1(y2),c:S.color,lw:SLW[S.wi]}}
-function mkCircle(o){return{type:'circle',cx:o.x0,cy:o.y0,r:r1(hyp(o.x-o.x0,o.y-o.y0)),c:S.color,lw:SLW[S.wi],fill:S.fill,showC:S.cCenter,showR:S.cRadius,div:S.cDiv}}
+function mkCircle(o){const n=S.cDiv>=2?S.cDiv:1;return{type:'circle',cx:o.x0,cy:o.y0,r:r1(hyp(o.x-o.x0,o.y-o.y0)),c:S.color,lw:SLW[S.wi],fs:firstK(Math.min(S.cFillK,n)),showC:S.cCenter,showR:S.cRadius,div:S.cDiv}}
+function cN(s){return s.div>=2?s.div:1}
+function cFills(s){if(Array.isArray(s.fs))return s.fs;return s.fill?firstK(cN(s)):[]}  // 舊版資料相容
+function firstK(k){return Array.from({length:k},(_,i)=>i)}
+function sliceAt(s,x,y){const n=cN(s);let a=Math.atan2(y-s.cy,x-s.cx)+Math.PI/2;a=((a%TAU)+TAU)%TAU;return Math.min(n-1,Math.floor(a/(TAU/n)))}
 function sec1Geom(o){return{cx:o.x0,cy:o.y0,r:hyp(o.x-o.x0,o.y-o.y0),a0:snapAng(Math.atan2(o.y-o.y0,o.x-o.x0))}}
 function mkSector(g,sweep){return{type:'sector',cx:g.cx,cy:g.cy,r:r1(g.r),a0:g.a0,sweep,c:S.color,lw:SLW[S.wi],fill:S.fill,dash:S.showDashed,lab:S.showAngle}}
 
@@ -543,6 +568,10 @@ stage.addEventListener('pointerdown',e=>{
   if(e.pointerType==='mouse'&&e.button!==0)return;
   closePop();
   const [x,y]=pt(e),t=S.tool,id=e.pointerId;
+  if(e.pointerType==='touch'){
+    lastTouch=Math.round(Math.max(e.width||0,e.height||0));const ts=document.getElementById('touchsz');if(ts)ts.textContent=lastTouch;
+    if(S.palm===4||(PALM[S.palm]&&lastTouch>PALM[S.palm])){ignored.add(id);return;}
+  }
   if(editing){commitEditor();if(t==='text')return;}
   try{stage.setPointerCapture(id)}catch(_){}
   if(t==='pen'||t==='hl'){
@@ -577,19 +606,29 @@ stage.addEventListener('pointerdown',e=>{
     }
     const hit=topHit(x,y);
     if(!hit){selected=null;renderShapes();updateOpts();return;}
+    const again=hit===selected;
     pushHist();selected=replaceShape(hit,{...hit});
+    if(selected.type==='circle')selected.fs=[...cFills(selected)];
     if(selected.type==='sector')S.angle=sweepDeg(selected);
-    shapeOp={pid:id,type:'move',lx:x,ly:y,moved:false};renderShapes();updateOpts();
+    shapeOp={pid:id,type:'move',lx:x,ly:y,moved:false,again,tx:x,ty:y};renderShapes();updateOpts();
   }
 });
 stage.addEventListener('pointermove',e=>{
-  const id=e.pointerId,a=active.get(id);
+  const id=e.pointerId;if(ignored.has(id))return;
+  const a=active.get(id);
   if(!a&&(!shapeOp||shapeOp.pid!==id))return;
+  if(e.pointerType==='touch'&&PALM[S.palm]&&S.palm<4&&Math.max(e.width||0,e.height||0)>PALM[S.palm]){
+    lastTouch=Math.round(Math.max(e.width,e.height));
+    if(a&&a.item){active.delete(id);ignored.add(id);reqOv();return;}
+  }
   const evs=e.getCoalescedEvents?e.getCoalescedEvents():[e];
   for(const ev of (evs.length?evs:[e])){
     const [x,y]=pt(ev);
     if(a){
-      if(a.item){const p=a.item.p,l=p[p.length-1];if(hyp(x-l[0],y-l[1])>=1.2)p.push([x,y]);}
+      if(a.item){
+        const p=a.item.p,k=STAB[S.stab];let sx=x,sy=y;a.raw=[x,y];
+        if(k){if(!a.sm)a.sm=[p[0][0],p[0][1]];a.sm[0]+=(x-a.sm[0])*(1-k);a.sm[1]+=(y-a.sm[1])*(1-k);sx=r1(a.sm[0]);sy=r1(a.sm[1]);}
+        const l=p[p.length-1];if(hyp(sx-l[0],sy-l[1])>=1.2)p.push([sx,sy]);}
       else if(a.er){const l=a.last;if(hyp(x-l[0],y-l[1])>=1.2){a.er.p.push([x,y]);
         ctxI.save();ctxI.globalCompositeOperation='destination-out';ctxI.lineCap='round';ctxI.lineWidth=a.er.w;ctxI.beginPath();ctxI.moveTo(l[0],l[1]);ctxI.lineTo(x,y);ctxI.stroke();ctxI.restore();a.last=[x,y];}
         a.ring=[x,y];}
@@ -612,9 +651,13 @@ stage.addEventListener('pointermove',e=>{
 });
 function updSweep(o){const st=S.snap,d=o.acc*180/Math.PI;let s=Math.round(d/st)*st;s=Math.max(-360,Math.min(360,s));o.sweep=s*Math.PI/180;}
 function endPointer(e){
-  const id=e.pointerId,a=active.get(id);
+  const id=e.pointerId;
+  if(ignored.has(id)){ignored.delete(id);return;}
+  const a=active.get(id);
   if(a){
     active.delete(id);
+    if(a.item&&a.raw&&a.sm){const p=a.item.p,l=p[p.length-1],[rx,ry]=a.raw,d=hyp(rx-l[0],ry-l[1]);
+      if(d>=1.2){const n=Math.min(6,Math.ceil(d/4));for(let i=1;i<=n;i++)p.push([r1(l[0]+(rx-l[0])*i/n),r1(l[1]+(ry-l[1])*i/n)]);}}
     if(a.item){pushHist();P().ink.push(a.item);drawInkItem(ctxI,a.item);refreshMeta();save();}
     else if(a.er){refreshMeta();save();}
     else if(a.obj){if(!a.changed)P().hist.pop();refreshMeta();save();}
@@ -626,6 +669,8 @@ function endPointer(e){
   else if(o.type==='circle'){const s=mkCircle(o);if(s.r>=8){pushHist();P().shapes.push(s);renderAll();}}
   else if(o.type==='sec1'){const g=sec1Geom(o);pending=g.r>=15?g:null;updateHint();}
   else if(o.type==='sec2'){if(o.sweep){pushHist();P().shapes.push(mkSector(pending,o.sweep));pending=null;renderAll();updateHint();}}
+  else if(o.type==='move'&&!o.moved&&o.again&&selected&&selected.type==='circle'&&hyp(o.tx-selected.cx,o.ty-selected.cy)<=selected.r){
+    const k=sliceAt(selected,o.tx,o.ty),fs=selected.fs;const i=fs.indexOf(k);if(i>=0)fs.splice(i,1);else fs.push(k);renderAll();updateOpts();}
   else if(o.type==='move'||o.type==='resize'){if(!o.moved)P().hist.pop();renderAll();}
   reqOv();
 }
@@ -642,6 +687,27 @@ function applyAngle(){
     pushHist();selected=replaceShape(selected,{...selected,sweep:(selected.sweep<0?-1:1)*rad});renderAll();updateOpts();return;
   }
   flash(S.tool==='sector'?'先拉出第一條半徑，再按角度':'先點一個扇形');
+}
+
+/* ================= keypad ================= */
+function keypad(init){
+  const kp=$('#kp'),kv=$('#kv'),ke=$('#kerr');let v='',fresh=true;
+  const show=()=>{kv.textContent=v||'0';};
+  v=String(init||'');show();ke.textContent='';kp.classList.add('show');
+  return new Promise(res=>{
+    const done=r=>{kp.classList.remove('show');kp.onclick=null;removeEventListener('keydown',onKey,true);res(r);};
+    const press=k=>{
+      if(/^\d$/.test(k)){if(fresh){v='';fresh=false;}if(v.length<3)v=(v+k).replace(/^0+/,'');ke.textContent='';}
+      else if(k==='B'){fresh=false;v=v.slice(0,-1);}
+      else if(k==='C'){fresh=false;v='';}
+      else if(k==='X')return done(null);
+      else if(k==='OK'){const n=+v;if(!n||n<1||n>360){ke.textContent='請輸入 1 到 360 之間的整數';return;}return done(n);}
+      show();
+    };
+    const onKey=e=>{const m={Enter:'OK',Escape:'X',Backspace:'B',Delete:'C'};const k=/^\d$/.test(e.key)?e.key:m[e.key];if(k){e.preventDefault();e.stopPropagation();press(k);}};
+    addEventListener('keydown',onKey,true);
+    kp.onclick=e=>{const b=e.target.closest('button');if(b)press(b.dataset.k);else if(e.target===kp)done(null);};
+  });
 }
 
 /* ================= toolbar UI ================= */
@@ -677,9 +743,11 @@ bar.addEventListener('click',e=>{
   }
 });
 function applyAlign(){dock.className=S.align==='center'?'':'al-'+S.align;fitDock();}
+let penPanel=false;
 function setTool(t){
   commitEditor();
-  if(t!==S.tool){pending=null;shapeOp=null;if(selected){selected=null;renderShapes();}}
+  if(t!==S.tool){pending=null;shapeOp=null;penPanel=false;if(selected){selected=null;renderShapes();}}
+  else if(t==='pen'||t==='hl')penPanel=!penPanel;
   S.tool=t;refreshUI();reqOv();
 }
 function gotoPage(i){commitEditor();cur=i;pending=null;shapeOp=null;selected=null;active.clear();renderAll();updateOpts();updateHint();}
@@ -699,18 +767,23 @@ function refreshUI(){
 const seg=(label,key,vals,fmt)=>`<div class="og"><span class="ol">${label}</span>${vals.map(v=>`<button class="ob ${S[key]===v?'on':''}" data-set="${key}" data-val="${v}">${fmt?fmt(v):v}</button>`).join('')}</div>`;
 const tog=(label,key)=>`<button class="ob ${S[key]?'on':''}" data-tog="${key}">${label}</button>`;
 const TSZ_NAME={36:'小',54:'中',80:'大',120:'特大'};
-const angleGroup=()=>`<div class="og"><span class="ol">圓心角</span><button class="ob" data-act="adec">−</button><span class="angv">${S.angle}°</span><button class="ob" data-act="ainc">＋</button><button class="ob pri" data-act="aapply">套用</button></div><div class="og">${[30,45,60,90,120,180,270,360].map(v=>`<button class="ob sm" data-act="aset" data-val="${v}">${v}°</button>`).join('')}</div>`;
+const DIVS=[0,2,3,4,5,6,8,10,12,16];
+const divGroup=cur=>`<div class="og"><span class="ol">等分</span>${DIVS.map(v=>`<button class="ob sm ${cur===v?'on':''}" data-act="cdiv" data-val="${v}">${v||'無'}</button>`).join('')}</div>`;
+const fillGroup=(n,k,sel)=>`<div class="og"><span class="ol">塗色</span>${n===1?`<button class="ob ${k===0?'on':''}" data-act="cfill" data-val="0">不塗</button><button class="ob ${k===1?'on':''}" data-act="cfill" data-val="1">塗滿</button>`:firstK(n+1).map(i=>`<button class="ob sm ${k===i?'on':''}" data-act="cfill" data-val="${i}">${i===0?'不塗':i+'/'+n}</button>`).join('')}</div>`;
+const angleGroup=()=>`<div class="og"><span class="ol">圓心角</span><button class="ob angv" data-act="akey" title="點一下輸入角度">${S.angle}°</button><button class="ob pri" data-act="aapply">套用</button></div><div class="og">${[30,45,60,90,120,180,270,360].map(v=>`<button class="ob sm" data-act="aset" data-val="${v}">${v}°</button>`).join('')}</div>`;
 function updateOpts(){
   let h='';const t=S.tool;
   if(bar.classList.contains('min')){opts.classList.remove('show');return;}
-  if(t==='eraser')h=seg('模式','eraserMode',['pixel','object'],v=>v==='pixel'?'局部擦':'整筆擦')+`<span class="note">${S.eraserMode==='pixel'?'只擦手寫筆跡，不會擦到圖形、文字和圖片':'碰到就整個刪除（筆跡、圖形、文字），圖片不受影響'}</span>`;
+  if((t==='pen'||t==='hl')&&penPanel)h=seg('筆觸穩定','stab',[0,1,2,3],v=>STAB_NAME[v])+seg('防手掌誤觸','palm',[0,1,2,3,4],v=>PALM_NAME[v])+`<span class="note">最近一次觸碰大小：<b id="touchsz">${lastTouch||'—'}</b> px</span>`;
+  else if(t==='eraser')h=seg('模式','eraserMode',['pixel','object'],v=>v==='pixel'?'局部擦':'整筆擦')+`<span class="note">${S.eraserMode==='pixel'?'只擦手寫筆跡，不會擦到圖形、文字和圖片':'碰到就整個刪除（筆跡、圖形、文字），圖片不受影響'}</span>`;
   else if(t==='text')h=seg('字級','tsize',TSIZES,v=>TSZ_NAME[v])+`<span class="note">點黑板開始打字，點旁邊空白處完成；點已有的文字可以修改</span>`;
-  else if(t==='sector')h=seg('吸附','snap',[1,5,15],v=>v+'°')+`<div class="og">${tog('角度標示','showAngle')}${tog('虛線圓','showDashed')}${tog('填色','fill')}</div>`+angleGroup();
-  else if(t==='circle')h=`<div class="og">${tog('圓心','cCenter')}${tog('半徑線','cRadius')}${tog('填色','fill')}</div>`+seg('等分','cDiv',[0,2,3,4,6,8,12,16],v=>v||'無');
+  else if(t==='sector')h=`<div class="og">${tog('角度標示','showAngle')}${tog('虛線圓','showDashed')}${tog('填色','fill')}</div>`+angleGroup();
+  else if(t==='circle')h=`<div class="og">${tog('圓心','cCenter')}${tog('半徑線','cRadius')}</div>`+divGroup(S.cDiv)+fillGroup(S.cDiv>=2?S.cDiv:1,S.cFillK);
   else if(t==='select'){
     if(selected){
       h=`<button class="ob danger" data-act="del">刪除</button>`;
       if(selected.type==='sector')h+=angleGroup();
+      if(selected.type==='circle')h+=divGroup(selected.div||0)+fillGroup(cN(selected),cFills(selected).length,true)+`<span class="note">再點一下圓裡的某一塊，可以單獨塗色或取消</span>`;
       if(selected.type==='text')h+=`<button class="ob" data-act="tedit">修改文字</button><div class="og"><span class="ol">字級</span>${TSIZES.map(v=>`<button class="ob ${selected.size===v?'on':''}" data-act="tsz" data-val="${v}">${TSZ_NAME[v]}</button>`).join('')}</div>`;
       if(selected.type==='img')h+=`<button class="ob" data-act="ifit">放大到整頁</button><span class="note">拖曳移動，拖右下角圓點縮放</span>`;
       else h+=`<span class="note">拖曳移動；點色票換顏色</span>`;
@@ -720,10 +793,15 @@ function updateOpts(){
 }
 opts.addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;const d=b.dataset;
-  if(d.set){const v=isNaN(+d.val)?d.val:+d.val;S[d.set]=v;if(d.set==='tsize'&&editing){editing.size=v;placeEditor();editor.focus();}}
+  if(d.set){const v=isNaN(+d.val)?d.val:+d.val;S[d.set]=v;if(d.set==='tsize'&&editing){editing.size=v;placeEditor();editor.focus();}if(d.set==='stab'||d.set==='palm')savePrefs();}
+  else if(d.act==='akey'){keypad(S.angle).then(v=>{if(v==null)return;S.angle=v;if(pending||(selected&&selected.type==='sector'))applyAngle();else{flash('先拉出第一條半徑，再按「套用」');}updateOpts();});return;}
+  else if(d.act==='cdiv'){const v=+d.val;
+    if(S.tool==='select'&&selected&&selected.type==='circle'){pushHist();const k=Math.min(cFills(selected).length,v>=2?v:1);selected=replaceShape(selected,{...selected,div:v,fs:firstK(k)});renderAll();}
+    else{S.cDiv=v;S.cFillK=Math.min(S.cFillK,v>=2?v:1);}}
+  else if(d.act==='cfill'){const v=+d.val;
+    if(S.tool==='select'&&selected&&selected.type==='circle'){pushHist();selected=replaceShape(selected,{...selected,fs:firstK(v)});renderAll();}
+    else S.cFillK=v;}
   else if(d.tog){S[d.tog]=!S[d.tog];}
-  else if(d.act==='adec'){S.angle=Math.max(1,S.angle-S.snap);}
-  else if(d.act==='ainc'){S.angle=Math.min(360,S.angle+S.snap);}
   else if(d.act==='aset'){S.angle=+d.val;if(pending||(selected&&selected.type==='sector'))applyAngle();}
   else if(d.act==='aapply'){applyAngle();}
   else if(d.act==='del'&&selected){pushHist();P().shapes=P().shapes.filter(s=>s!==selected);selected=null;renderAll();}
@@ -766,6 +844,7 @@ function updateHint(){
   let h='';
   if(S.tool==='sector')h=pending?'② 拖曳旋轉，畫出圓心角（也可以直接按下方角度）<button data-x>取消</button>':'① 從圓心按住，拉出第一條半徑';
   else if(S.tool==='circle')h='從圓心按住拖曳，決定半徑';
+  else if((S.tool==='pen'||S.tool==='hl')&&penPanel)h='筆觸穩定、防手掌誤觸設定（再點一次畫筆可收起）';
   else if(S.tool==='line')h='按住拖曳畫直線（接近水平、垂直時會自動對齊）';
   hint.innerHTML=h;hint.classList.toggle('show',!!h&&home.classList.contains('hide'));
 }
