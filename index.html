@@ -490,6 +490,7 @@ function drawOv(){
     }
   }
   if(pending&&!(o&&o.type==='sec2'))drawRadiusGuide(x,pending);
+  if(V.z!==1||V.ox||V.oy){x.save();x.setLineDash([16/V.z,12/V.z]);x.lineWidth=3/V.z;x.strokeStyle=isDark()?'rgba(255,255,255,.4)':'rgba(0,0,0,.3)';x.strokeRect(0,0,W,H);x.restore();}
 }
 
 /* ================= shape builders ================= */
@@ -634,10 +635,11 @@ function pt(e){const [vx,vy]=vpt(e);return[r1((vx-V.ox)/V.z),r1((vy-V.oy)/V.z)]}
 function setView(z,ax,ay){
   z=Math.max(1,Math.min(5,z));if(ax==null){ax=W/2;ay=H/2;}
   const wx=(ax-V.ox)/V.z,wy=(ay-V.oy)/V.z;
-  V.z=z;V.ox=Math.min(0,Math.max(W-W*z,ax-wx*z));V.oy=Math.min(0,Math.max(H-H*z,ay-wy*z));
+  V.z=z;V.ox=Math.min(W*z,Math.max(W-2*W*z,ax-wx*z));V.oy=Math.min(H*z,Math.max(H-2*H*z,ay-wy*z));
   for(const x of [ctxS,ctxI,ctxO])viewT(x);
-  applyBg();if(editing)placeEditor();renderAll(false);$('#zPct').textContent=Math.round(V.z*100)+'%';
+  applyBg();if(editing)placeEditor();renderAll(false);zLabel();
 }
+function zLabel(){const home=V.z===1&&!V.ox&&!V.oy;$('#zPct').textContent=(home?'':'↺ ')+Math.round(V.z*100)+'%';$('#zPct').title=home?'':'回到原位';}
 function panView(dx,dy){V.ox+=dx;V.oy+=dy;setView(V.z,0,0);}
 /* 兩指縮放 */
 const touches=new Map();let pinch=null;
@@ -674,8 +676,10 @@ stage.addEventListener('pointerdown',e=>{
     lastTouch=Math.round(Math.max(e.width||0,e.height||0));const ts=document.getElementById('touchsz');if(ts)ts.textContent=lastTouch;
     if(S.palm===4||(PALM[S.palm]&&lastTouch>PALM[S.palm])){ignored.add(id);return;}
     touches.set(id,[e.clientX,e.clientY]);
-    if(touches.size===2&&!pinch){startPinch();return;}
-    if(touches.size>2){ignored.add(id);return;}
+    if(!['pen','hl','eraser'].includes(t)){          // 畫筆、螢光筆、橡皮擦：多指＝多人同時書寫；其他工具：兩指＝縮放
+      if(touches.size===2&&!pinch){startPinch();return;}
+      if(touches.size>2){ignored.add(id);return;}
+    }
   }
   if(editing){commitEditor();if(t==='text')return;}
   try{stage.setPointerCapture(id)}catch(_){}
@@ -747,7 +751,7 @@ stage.addEventListener('pointermove',e=>{
       const o=shapeOp,s=selected;
       if(o.type==='blank'){
         if(!o.moved&&hyp(ev.clientX-o.cx,ev.clientY-o.cy)>8)o.moved=true;
-        if(o.moved&&V.z>1){panView((ev.clientX-o.cx)/scale,(ev.clientY-o.cy)/scale);o.cx=ev.clientX;o.cy=ev.clientY;}
+        if(o.moved){panView((ev.clientX-o.cx)/scale,(ev.clientY-o.cy)/scale);o.cx=ev.clientX;o.cy=ev.clientY;}
       }
       else if(o.type==='clone'){
         if(hyp(x-o.tx,y-o.ty)>6){
@@ -865,7 +869,7 @@ addEventListener('pointerdown',e=>{if(!ctxEl.contains(e.target))closeCtx();},tru
 /* ================= 縮放按鈕 ================= */
 $('#zIn').addEventListener('click',()=>setView(V.z*1.25));
 $('#zOut').addEventListener('click',()=>setView(V.z/1.25));
-$('#zPct').addEventListener('click',()=>setView(1));
+$('#zPct').addEventListener('click',()=>{V.z=1;V.ox=0;V.oy=0;setView(1);});
 
 /* ================= 簡報模式 ================= */
 function togglePresent(){
@@ -956,7 +960,7 @@ function setTool(t){
   S.tool=t;refreshUI();renderShapes();reqOv();
 }
 function gotoPage(i,showAll){commitEditor();cur=i;pending=null;shapeOp=null;selected=null;active.clear();animStart.clear();
-  revealed=showAll?animList().length:0;V.z=1;V.ox=0;V.oy=0;for(const x of [ctxS,ctxI,ctxO])viewT(x);applyBg();$('#zPct').textContent='100%';
+  revealed=showAll?animList().length:0;V.z=1;V.ox=0;V.oy=0;for(const x of [ctxS,ctxI,ctxO])viewT(x);applyBg();zLabel();
   renderAll();updateOpts();updateHint();updatePres();}
 function refreshMeta(){
   $('#bUndo').disabled=!P().hist.length;$('#bRedo').disabled=!P().redo.length;
@@ -999,7 +1003,7 @@ function updateOpts(){
       if(selected.type==='text')h+=`<button class="ob" data-act="tedit">修改文字</button><div class="og"><span class="ol">字級</span>${TSIZES.map(v=>`<button class="ob ${selected.size===v?'on':''}" data-act="tsz" data-val="${v}">${TSZ_NAME[v]}</button>`).join('')}</div>`;
       if(selected.type==='img')h+=`<button class="ob" data-act="ifit">放大到整頁</button><span class="note">拖曳移動，拖右下角圓點縮放</span>`;
       else h+=`<span class="note">拖曳移動；點色票換顏色</span>`;
-    }else h=(clip?'<button class="ob" data-act="paste">貼上</button>':'')+`<span class="note">點一下圖片、文字、圓、扇形或直線來選取${V.z>1?'；拖曳空白處可以移動畫面':''}</span>`;
+    }else h=(clip?'<button class="ob" data-act="paste">貼上</button>':'')+`<span class="note">點一下圖片、文字、圓、扇形或直線來選取；拖曳空白處可以移動畫面</span>`;
   }
   opts.innerHTML=h;opts.classList.toggle('show',!!h);fitDock();
 }
