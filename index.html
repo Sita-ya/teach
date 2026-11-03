@@ -6,8 +6,8 @@
 <title>數學電子白板</title>
 <style>
 :root{--ui:rgba(28,33,39,.95);--ui2:#323a44;--acc:#27a99a;--txt:#eef2f5;--dim:#9aa6b2}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
-html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;color:var(--txt);overscroll-behavior:none}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",system-ui,sans-serif;color:var(--txt);overscroll-behavior:none;touch-action:none}
 #stage{position:absolute;touch-action:none;overflow:hidden;background:#24503d}
 #stage canvas{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none}
 #editor{position:absolute;display:none;margin:0;padding:0;border:none;outline:2px dashed #27d3bf;outline-offset:6px;background:rgba(0,0,0,.08);resize:none;overflow:hidden;white-space:pre;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;font-weight:500;line-height:1.25;touch-action:auto;user-select:text;-webkit-user-select:text;z-index:5}
@@ -19,6 +19,13 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 .bside{display:flex;align-items:center;justify-content:space-between;min-width:0}
 .bg1,.bmid{display:flex;align-items:center;gap:3px}
 .bmid{padding:0 6px;border-radius:16px;background:rgba(255,255,255,.05)}
+#bar.two{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);grid-template-areas:"w m c" "a a b";row-gap:6px}
+#bar.two .bside{display:contents}
+#bar.two .bl>.bg1:first-child{grid-area:a;justify-self:start}
+#bar.two .bl>.bg1:last-child{grid-area:w;justify-self:end}
+#bar.two .bmid{grid-area:m}
+#bar.two .br>.bg1:first-child{grid-area:c;justify-self:start}
+#bar.two .br>.bg1:last-child{grid-area:b;justify-self:end}
 #bar.min{display:flex;align-self:center}
 #bar.min .bmid,#bar.min .bl,#bar.min .br .bg1:first-child{display:none}
 #bar.min .br .bg1>*:not(#bMin){display:none}
@@ -71,7 +78,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 #hint button{height:40px;padding:0 16px;border:none;border-radius:999px;background:#d9534f;color:#fff;font-size:17px;font-family:inherit;cursor:pointer}
 
 /* home */
-#home{position:fixed;inset:0;z-index:30;background:#14181c;overflow-y:auto;touch-action:pan-y;padding:40px 56px 60px}
+#home{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;background:#14181c;overflow-y:auto;touch-action:pan-y;padding:40px 56px 60px}
 #home.hide{display:none}
 #home h1{margin:0 0 6px;font-size:34px;font-weight:700;letter-spacing:.02em}
 #home .sub{color:var(--dim);font-size:16px;margin-bottom:26px}
@@ -86,6 +93,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 .card{background:#1e242a;border-radius:14px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
 .card:hover{border-color:#3a4652}
 .thumb{aspect-ratio:16/9;background:#24503d;display:block;width:100%;object-fit:cover}
+@supports not (aspect-ratio:1){div.thumb{height:0;padding-bottom:56.25%}}
 .cbody{padding:12px 14px 14px}
 .cname{font-size:20px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cmeta{font-size:14px;color:var(--dim);margin:4px 0 10px}
@@ -105,7 +113,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 #modal .note{font-size:16px;color:var(--dim)}
 #bCloud.cs-auth small,#bCloud.cs-err small{color:#ff9d93}
 #bCloud.cs-busy small,#bCloud.cs-dirty small{color:#f0d07a}
-#kp{position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
+#kp{position:fixed;top:0;right:0;bottom:0;left:0;z-index:45;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
 #kp.show{display:flex}
 .kbox{background:#20262c;border-radius:20px;padding:22px;width:380px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .kt{font-size:18px;color:var(--dim);text-align:center}
@@ -118,7 +126,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 .kbtm{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .kbtm button{font-size:24px}.kbtm .kok{background:var(--acc);color:#fff;font-weight:700}
 .ob.angv{min-width:110px;font-size:26px;font-weight:700;background:#1b2126;box-shadow:inset 0 0 0 2px #e9a53a}
-#modal{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
+#modal{position:fixed;top:0;right:0;bottom:0;left:0;z-index:40;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center}
 #modal.show{display:flex}
 #modal .box{background:#20262c;border-radius:16px;padding:24px;width:min(560px,90vw);box-shadow:0 10px 40px rgba(0,0,0,.5)}
 #modal .mt{font-size:21px;margin-bottom:14px;line-height:1.5}
@@ -173,6 +181,10 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 <script>
 (()=>{
 const W=1920,H=1080,TAU=Math.PI*2;
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){r=Math.min(+r||0,w/2,h/2);
+    this.moveTo(x+r,y);this.arcTo(x+w,y,x+w,y+h,r);this.arcTo(x+w,y+h,x,y+h,r);this.arcTo(x,y+h,x,y,r);this.arcTo(x,y,x+w,y,r);this.closePath();};
+}
 const $=s=>document.querySelector(s);
 const stage=$('#stage'),cvS=$('#cvS'),cvI=$('#cvI'),cvO=$('#cvO'),editor=$('#editor');
 const ctxS=cvS.getContext('2d'),ctxI=cvI.getContext('2d'),ctxO=cvO.getContext('2d');
@@ -249,7 +261,9 @@ async function saveBoard(){
 function layout(){
   const vw=innerWidth,vh=innerHeight;
   let w=vw,h=vw*9/16; if(h>vh){h=vh;w=vh*16/9;}
-  Object.assign(stage.style,{width:w+'px',height:h+'px',left:(vw-w)/2+'px',top:(vh-h)/2+'px'});
+  const two=vh-h>=160;                         // 螢幕比 16:9 高（例如 4:3 投影）：黑板貼上緣，工具列改兩排放在下方空白處
+  bar.classList.toggle('two',two);
+  Object.assign(stage.style,{width:w+'px',height:h+'px',left:(vw-w)/2+'px',top:(two?0:(vh-h)/2)+'px'});
   scale=w/W; dpr=Math.min(window.devicePixelRatio||1,2);
   for(const c of [cvS,cvI,cvO]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
   for(const x of [ctxS,ctxI,ctxO]) viewT(x);
@@ -260,7 +274,11 @@ function fitDock(){
   if(bar.classList.contains('min')){placeFloat();return;}
   // 中間的四個工具要剛好在螢幕正中央：左右兩側取較寬的一邊當寬度
   const l=bar.querySelector('.bl'),r=bar.querySelector('.br'),m=bar.querySelector('.bmid');
-  const side=Math.max(l.scrollWidth,r.scrollWidth),natural=side*2+m.offsetWidth+12+20+16;
+  let natural;
+  if(bar.classList.contains('two')){
+    const g=[...bar.querySelectorAll('.bside>.bg1')].map(x=>x.scrollWidth);   // [左排, 粗細, 顏色, 右排]
+    natural=Math.max(Math.max(g[1],g[2])*2+m.offsetWidth+12,g[0]+g[3]+24)+20;
+  }else{const side=Math.max(l.scrollWidth,r.scrollWidth);natural=side*2+m.offsetWidth+12+20+16;}
   const avail=innerWidth-28,s=Math.min(1,avail/natural);
   if(s<1){dock.style.width=(innerWidth/s)+'px';dock.style.left='0';dock.style.right='auto';dock.style.transform=`scale(${s})`;dock.style.transformOrigin='bottom left';}
   else{dock.style.left='0';dock.style.right='0';dock.style.transformOrigin='';}
@@ -667,7 +685,9 @@ stage.addEventListener('wheel',e=>{
   if(e.ctrlKey||e.metaKey)setView(V.z*Math.exp(-e.deltaY*.002),vx,vy);
   else if(V.z>1)panView(-(e.shiftKey?e.deltaY:e.deltaX)/scale,-(e.shiftKey?0:e.deltaY)/scale);
 },{passive:false});
+let lastPtrType='mouse';
 stage.addEventListener('pointerdown',e=>{
+  lastPtrType=e.pointerType;
   if(e.target===editor)return;
   if(e.pointerType==='mouse'&&e.button!==0)return;
   closePop();
@@ -801,6 +821,7 @@ stage.addEventListener('pointerup',endPointer);
 stage.addEventListener('pointercancel',endPointer);
 stage.addEventListener('contextmenu',e=>{
   e.preventDefault();if(editing)return;
+  if(lastPtrType!=='mouse'&&S.tool!=='select')return;   // 觸控長按：只有在「選取」時才跳出選單，寫字時不會被打斷
   const [x,y]=pt(e),hit=topHit(x,y);
   if(hit){if(S.tool!=='select')setTool('select');selected=hit;renderShapes();updateOpts();}
   openCtx(e.clientX,e.clientY,hit,[x,y]);
@@ -908,7 +929,7 @@ function placeFloat(){
   if(bar.classList.contains('min')||dock.style.display==='none'){zb.style.right='16px';zb.style.bottom='96px';zb.style.transform='';return;}
   const a=$('#bPlay').getBoundingClientRect(),c=$('#bFull').getBoundingClientRect();
   zb.style.transform='';const w=zb.offsetWidth,mid=(a.left+c.right)/2;
-  zb.style.right=Math.max(4,innerWidth-mid-w/2)+'px';zb.style.bottom=(innerHeight-a.top+10)+'px';
+  const bt=bar.getBoundingClientRect().top;zb.style.right=Math.max(4,innerWidth-mid-w/2)+'px';zb.style.bottom=(innerHeight-bt+8)+'px';
 }
 
 /* ================= keypad ================= */
@@ -1008,7 +1029,7 @@ function updateOpts(){
   else if(t==='circle')h=`<div class="og">${tog('圓心','cCenter')}${tog('半徑線','cRadius')}</div>`+divGroup(S.cDiv)+fillGroup(S.cDiv>=2?S.cDiv:1,S.cFillK);
   else if(t==='select'){
     if(selected&&selected.locked){
-      h=`<button class="ob pri" data-act="lock">解除鎖定</button><button class="ob" data-act="copy">複製</button>`+animGroup()+`<span class="note">已鎖定：不能移動、修改或刪除</span>`;
+      h=`<button class="ob pri" data-act="lock">解除鎖定</button><button class="ob" data-act="copy">複製</button>${clip?'<button class="ob" data-act="paste">貼上</button>':''}`+animGroup()+`<span class="note">已鎖定：不能移動、修改或刪除</span>`;
     }else if(selected){
       h=`<div class="og"><button class="ob" data-act="copy">複製</button><button class="ob" data-act="dup">再製</button>${clip?'<button class="ob" data-act="paste">貼上</button>':''}<button class="ob" data-act="lock">鎖定</button><button class="ob ${selected.clone?'on':''}" data-act="clone">無限複製</button><button class="ob danger" data-act="del">刪除</button></div>`+animGroup();
       if(selected.clone)h+=`<span class="note">無限複製開啟中：拖曳它會拉出一份新的，原本的留在原地</span>`;
@@ -1089,8 +1110,9 @@ hint.addEventListener('click',e=>{if(e.target.closest('[data-x]')){pending=null;
 
 function toggleFull(){
   try{
-    if(document.fullscreenElement)document.exitFullscreen();
-    else{const r=document.documentElement.requestFullscreen();if(r&&r.catch)r.catch(()=>flash('這個環境不允許全螢幕，可以按 F11'));}
+    const de=document.documentElement,fe=document.fullscreenElement||document.webkitFullscreenElement;
+    if(fe){(document.exitFullscreen||document.webkitExitFullscreen).call(document);}
+    else{const fn=de.requestFullscreen||de.webkitRequestFullscreen;if(!fn)throw 0;const r=fn.call(de);if(r&&r.catch)r.catch(()=>flash('這個環境不允許全螢幕，可以按 F11'));}
   }catch(_){flash('這個環境不允許全螢幕，可以按 F11');}
 }
 
@@ -1136,7 +1158,7 @@ const Cloud={
   async getToken(interactive){
     if(this.live)return true;
     if(!interactive||!this.configured)return false;
-    try{await this.loadGis();}catch(_){setCloud('err','連不到 Google，請檢查網路');return false;}
+    try{await this.loadGis();}catch(_){setCloud('err','連不到 Google（網路斷線，或學校防火牆擋住）');return false;}
     return new Promise(res=>{
       let doneFlag=false;const done=v=>{if(!doneFlag){doneFlag=true;res(v);}};
       const c=google.accounts.oauth2.initTokenClient({client_id:CLIENT_ID,scope:SCOPE,
@@ -1203,7 +1225,7 @@ const Cloud={
     this.pushT.set(id,setTimeout(()=>{this.pushT.delete(id);queuePush(id);},delay));
   }
 };
-function setCloud(state,msg=''){Cloud.state=state;Cloud.msg=msg;renderCloudUI();}
+function setCloud(state,msg=''){if(/fetch|network|Load failed/i.test(msg))msg='連不到 Google 雲端硬碟（網路或防火牆），內容先存在這台電腦';Cloud.state=state;Cloud.msg=msg;renderCloudUI();}
 const pushQ=new Map();
 function queuePush(id){const p=(pushQ.get(id)||Promise.resolve()).then(()=>pushBoard(id));pushQ.set(id,p.catch(()=>{}));return p;}
 function flushPush(id){
@@ -1306,7 +1328,7 @@ $('#cloudBar').addEventListener('click',async e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.id==='cLogin'||b.id==='cReconnect'){
     if(await Cloud.getToken(true)){showWarn('');await syncAll();renderHome(false);}
-    else showWarn('沒有完成 Google 登入。如果登入視窗沒有出現，請允許這個網站開啟彈出式視窗。');
+    else showWarn(Cloud.state==='err'?'連不到 Google，可能是網路斷線或學校防火牆擋住。黑板照常可以用，只是先存在這台電腦。':'沒有完成 Google 登入。如果登入視窗沒有出現，請允許這個網站開啟彈出式視窗。');
   }
   else if(b.id==='cSync'){await syncAll();renderHome(false);}
   else if(b.id==='cLogout')logout();
@@ -1478,6 +1500,23 @@ async function ask({title,value='',ok='確定',danger=false,input=true}){
 async function choose(title,buttons){const r=await modal({title,buttons:[{label:'取消',val:null},...buttons]});return r&&r.val;}
 
 /* ================= start ================= */
+/* 觸控、觸控筆點按鈕：手指離開就觸發，不等瀏覽器的 click。
+   剛寫完字馬上點工具列時，瀏覽器常把這一下當成手勢的一部分而吃掉 click；改用 pointerup 就不會漏按。 */
+(function(){
+  let down=null,sup=null;const pick=t=>t&&t.closest?t.closest('button,.card'):null;
+  document.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'){down=null;return;}const el=pick(e.target);down=el?{el,x:e.clientX,y:e.clientY,id:e.pointerId}:null;},true);
+  document.addEventListener('pointerup',e=>{
+    if(!down||e.pointerId!==down.id)return;const d=down;down=null;
+    const el=pick(document.elementFromPoint(e.clientX,e.clientY));
+    if(el!==d.el||el.disabled||hyp(e.clientX-d.x,e.clientY-d.y)>14)return;
+    sup={el,t:performance.now()};el.click();
+  },true);
+  document.addEventListener('pointercancel',()=>{down=null;},true);
+  document.addEventListener('click',e=>{
+    if(sup&&e.isTrusted&&performance.now()-sup.t<800){   // 不論落在哪個元素都擋掉：面板重排後，晚到的 click 可能落在別的按鈕上
+      e.stopImmediatePropagation();e.preventDefault();sup=null;}
+  },true);
+})();
 window.__mb={P:()=>P(),V,get selected(){return selected},get revealed(){return revealed}};  // 測試用
 async function start(){
   await Store.open();
@@ -1491,6 +1530,7 @@ async function start(){
   renderHome();
 }
 addEventListener('resize',()=>{if(home.classList.contains('hide'))layout();});
+document.addEventListener('webkitfullscreenchange',()=>setTimeout(()=>{if(home.classList.contains('hide'))layout();},50));
 document.addEventListener('fullscreenchange',()=>setTimeout(()=>{if(home.classList.contains('hide'))layout();},50));
 start();
 })();
