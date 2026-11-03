@@ -112,6 +112,24 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 .keys{border-collapse:collapse;font-size:17px;margin:8px 0}
 .keys td{padding:8px 18px 8px 0;border-bottom:1px solid #262d34;color:#dfe6eb}
 #home h1{margin:0 0 6px;font-size:34px;font-weight:700;letter-spacing:.02em}
+@media (max-width:720px){                       /* 手機直式 */
+  #home{padding:16px 16px 40px}
+  #bHelp{position:static;display:block;margin:0 0 12px auto;height:40px;font-size:16px;padding:0 14px}
+  #home h1{font-size:28px}
+  #home .sub{font-size:15px;margin-bottom:16px}
+  .hrow input{min-width:0;width:100%;flex-basis:100%}
+  .hrow .hb{flex:1}
+  #grid{grid-template-columns:1fr}
+  .hhead{flex-wrap:wrap;padding:10px 12px;gap:10px}
+  .htitle{font-size:22px;flex:1}
+  .hclose{width:44px;height:44px}
+  .htoc{order:3;flex-basis:100%;flex-wrap:nowrap;overflow-x:auto;touch-action:pan-x;padding-bottom:4px}
+  .htoc button{flex-shrink:0}
+  .hbody{padding:6px 16px 60px}
+  .hbody p,.hbody li{font-size:16px}
+  .hbody h2{font-size:21px}
+  .keys{font-size:15px}
+}
 #home .sub{color:var(--dim);font-size:16px;margin-bottom:26px}
 .hrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
 .hrow input{flex:1;min-width:320px;max-width:620px;height:56px;border-radius:12px;border:2px solid #39424d;background:#1e242a;color:var(--txt);font-size:20px;padding:0 16px;font-family:inherit;user-select:text;-webkit-user-select:text}
