@@ -91,6 +91,26 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 /* home */
 #home{position:fixed;top:0;right:0;bottom:0;left:0;z-index:30;background:#14181c;overflow-y:auto;touch-action:pan-y;padding:40px 56px 60px}
 #home.hide{display:none}
+#bHelp{position:absolute;top:32px;right:56px;height:48px;font-size:18px}
+#help{position:fixed;top:0;right:0;bottom:0;left:0;z-index:35;background:#14181c;display:none;flex-direction:column;touch-action:pan-y}
+#help.show{display:flex}
+.hhead{display:flex;align-items:center;gap:16px;padding:16px 28px;background:#1b2126;border-bottom:1px solid #2c343c;flex-shrink:0}
+.htitle{font-size:26px;font-weight:700;white-space:nowrap}
+.htoc{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.htoc button{height:38px;padding:0 12px;border:none;border-radius:999px;background:var(--ui2);color:var(--txt);font-size:15px;font-family:inherit;cursor:pointer}
+.hclose{width:52px;height:52px;border:none;border-radius:12px;background:var(--ui2);color:var(--txt);font-size:24px;cursor:pointer;flex-shrink:0}
+.hbody{overflow-y:auto;padding:12px 28px 80px;touch-action:pan-y;user-select:text;-webkit-user-select:text}
+.hbody section{max-width:920px;margin:0 auto;padding:18px 0 6px;border-bottom:1px solid #262d34}
+.hbody h2{font-size:24px;margin:8px 0 12px;color:#7fe0d3}
+.hbody p,.hbody li{font-size:18px;line-height:1.75;color:#dfe6eb}
+.hbody ul,.hbody ol{padding-left:24px;margin:8px 0}
+.hbody li{margin:4px 0}
+.hbody .tip{background:#1f2a2f;border-left:4px solid var(--acc);border-radius:8px;padding:12px 16px;font-size:17px;line-height:1.7;margin:12px 0;color:#dfe6eb}
+.hbody kbd{display:inline-block;min-width:26px;padding:1px 7px;border-radius:6px;background:#2b333c;border:1px solid #46505b;border-bottom-width:3px;font-family:inherit;font-size:15px;text-align:center}
+.tagd{display:inline-block;font-size:14px;padding:2px 9px;border-radius:999px;margin-right:8px;vertical-align:middle}
+.tagd.cloud{background:#24435e;color:#bfe0ff}.tagd.dirty{background:#5a4a16;color:#ffe08a}.tagd.conf{background:#5c2420;color:#ffb3ab}
+.keys{border-collapse:collapse;font-size:17px;margin:8px 0}
+.keys td{padding:8px 18px 8px 0;border-bottom:1px solid #262d34;color:#dfe6eb}
 #home h1{margin:0 0 6px;font-size:34px;font-weight:700;letter-spacing:.02em}
 #home .sub{color:var(--dim);font-size:16px;margin-bottom:26px}
 .hrow{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
@@ -111,7 +131,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 .cact{display:flex;gap:6px;flex-wrap:wrap}
 .cact button{height:40px;padding:0 12px;border:none;border-radius:9px;background:var(--ui2);color:var(--txt);font-size:15px;font-family:inherit;cursor:pointer}
 .cact button.del{color:#ff8a86}
-.empty{color:var(--dim);font-size:18px;padding:40px 0}
+.empty{color:var(--dim);font-size:18px;padding:40px 0;grid-column:1/-1}
 #cloudBar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#1b2126;border:1px solid #2c343c;border-radius:14px;padding:12px 16px;margin-bottom:18px;min-height:56px}
 #cloudBar .hb{height:48px;font-size:17px}
 .cnote{color:var(--dim);font-size:16px}
@@ -172,6 +192,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 <input type="file" id="fImg" accept="image/*" multiple hidden>
 
 <div id="home">
+  <button id="bHelp" class="hb">？ 操作說明</button>
   <h1>數學電子白板</h1>
   <div class="sub">每塊黑板可以有很多頁，像簡報一樣翻頁，上課時直接在上面寫。登入 Google 後會自動同步到你的雲端硬碟，換電腦也能接著用。</div>
   <div id="cloudBar"></div>
@@ -186,6 +207,123 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 </div>
 
 <div id="kp"><div class="kbox"><div class="kt">輸入圓心角（1～360）</div><div class="kdisp"><span id="kv"></span>°</div><div class="kerr" id="kerr"></div><div class="kgrid"><button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="C" class="kfn">清除</button><button data-k="0">0</button><button data-k="B" class="kfn">⌫</button></div><div class="kbtm"><button data-k="X" class="kcancel">取消</button><button data-k="OK" class="kok">確定</button></div></div></div>
+<div id="help" role="dialog" aria-label="操作說明">
+  <div class="hhead">
+    <div class="htitle">操作說明</div>
+    <div class="htoc">
+      <button data-go="h-start">開始使用</button><button data-go="h-bar">工具列</button><button data-go="h-write">書寫</button><button data-go="h-shape">圓與扇形</button><button data-go="h-obj">文字與圖片</button><button data-go="h-select">選取與編輯</button><button data-go="h-page">頁面與畫面</button><button data-go="h-show">簡報模式</button><button data-go="h-data">存檔與同步</button><button data-go="h-keys">快速鍵</button><button data-go="h-faq">常見問題</button>
+    </div>
+    <button class="hclose" id="helpClose" aria-label="關閉">✕</button>
+  </div>
+  <div class="hbody">
+
+  <section id="h-start">
+    <h2>開始使用</h2>
+    <p>在首頁輸入名稱，按「建立新黑板」。一塊黑板可以有很多頁，適合一節課的佈題放在同一塊黑板裡，上課時像簡報一樣翻頁，直接在上面寫。卡片上可以改名、複製、匯出檔案、刪除；複製很適合同一份佈題要給兩個班用。</p>
+    <p>按「用 Google 帳號登入」後，黑板會自動同步到你的 Google 雲端硬碟。在家備好課，到學校登入同一個帳號，首頁就會出現標著<span class="tagd cloud">在雲端</span>的卡片，點一下就會下載並打開。</p>
+    <div class="tip"><b>在學校上課的建議流程：</b>用無痕視窗（<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>N</kbd>）打開網址 → 登入 Google → 打開黑板上課 → 下課在首頁按「登出」→「登出並清除這台電腦的黑板」→ 關掉視窗。</div>
+  </section>
+
+  <section id="h-bar">
+    <h2>工具列</h2>
+    <p>最常用的螢光筆、畫筆、橡皮擦、選取固定在畫面正中央，左邊緊鄰三種粗細，右邊緊鄰八種顏色，換筆、換色、擦掉都不用走動。左端是首頁、雲端狀態、文字、直線、圓、扇形、圖片、復原、重做、清除；右端是翻頁、頁面管理、簡報、背景、全螢幕，最右邊的 ⌄ 可以把工具列收起來。縮放按鈕在「簡報、背景、全螢幕」的正上方。螢幕比較方的時候（例如 4:3 投影式白板），黑板會靠上，工具列改成兩排放在下方空白處。</p>
+    <p>選了某些工具後，工具列上方會多出一排設定，例如橡皮擦的模式、圓的等分、扇形的角度。</p>
+  </section>
+
+  <section id="h-write">
+    <h2>書寫</h2>
+    <ul>
+      <li><b>畫筆、螢光筆</b>：選好顏色和粗細直接寫。螢光筆是半透明的，適合畫重點。</li>
+      <li><b>橡皮擦</b>：「局部擦」只擦手寫筆跡，不會擦到圖形、文字和圖片；「整筆擦」碰到就整條刪除，也能刪掉圖形和文字。</li>
+      <li><b>多人同時寫</b>：選畫筆、螢光筆、橡皮擦時，每根手指各畫各的，兩三個學生可以同時上台寫。</li>
+      <li><b>筆觸穩定、防手掌誤觸</b>：畫筆已經選取時再點一次畫筆，就會出現這兩個設定。筆觸穩定越高，線條越平滑。防手掌誤觸是看觸碰面積，太大就當成手掌不畫線；「只認觸控筆」則是手指完全不能寫。</li>
+    </ul>
+    <div class="tip">第一次在某台白板上使用時，打開這個設定，用手指和手掌各點一下，看「最近一次觸碰大小」的數字有沒有變。有變化才代表那台白板支援防手掌誤觸。</div>
+  </section>
+
+  <section id="h-shape">
+    <h2>圓與扇形</h2>
+    <p><b>直線</b>：按住拖曳，接近水平或垂直時會自動對齊。</p>
+    <p><b>圓</b>：從圓心按住往外拉，放開就畫好。上方可以選「等分」（2 到 16 份）和「塗色」幾份，例如分 3 等分、塗 2/3，會從正上方開始順時針塗。畫好後用「選取」點這個圓，可以再改等分和塗色；選取狀態下再點圓裡的某一塊，可以單獨塗上或取消，適合在課堂上一塊一塊塗給學生看。</p>
+    <p><b>扇形</b>分兩步：</p>
+    <ol>
+      <li>從圓心按住，拉出第一條半徑，放開。</li>
+      <li>從任何地方拖曳旋轉，扇形會跟著長出來，畫面中央會即時顯示圓心角幾度，放開就畫好。</li>
+    </ol>
+    <p>拖曳時角度會自動停在 5 的倍數。要 72° 這類角度，拉好第一條半徑後點黃框裡的數字，用跳出來的數字鍵盤輸入；也可以直接點 30°、45°、90°、120° 等快速按鈕。畫好的扇形用「選取」點一下，也能改角度。上方可以切換「角度標示」「虛線圓」「填色」。</p>
+  </section>
+
+  <section id="h-obj">
+    <h2>文字與圖片</h2>
+    <p><b>文字</b>：選「文字」後點黑板就能打字，可以換行，點旁邊空白處完成。字級有小、中、大、特大，顏色跟著色票走。點已經打好的字可以直接修改。</p>
+    <p><b>圖片</b>：按「圖片」選檔案，也可以把截圖直接 <kbd>Ctrl</kbd>+<kbd>V</kbd> 貼上，或把圖檔拖進黑板。一次選多張會自動一張放一頁，課本題目可以一次截好、一次匯入排成簡報。圖片永遠在最底層，筆跡和圖形都疊在上面，橡皮擦不會擦到圖片。插入後拖曳可以移動，拉右下角的圓點可以縮放，也可以按「放大到整頁」。</p>
+  </section>
+
+  <section id="h-select">
+    <h2>選取與編輯</h2>
+    <ul>
+      <li><b>移動、換色、刪除</b>：用「選取」點一下文字、圖片或圖形，拖曳就能移動；選取時點色票可以換顏色；按「刪除」或鍵盤 <kbd>Delete</kbd> 刪掉。</li>
+      <li><b>複製、再製、貼上</b>：面板上有按鈕，鍵盤是 <kbd>Ctrl</kbd>+<kbd>C</kbd>、<kbd>Ctrl</kbd>+<kbd>V</kbd>、<kbd>Ctrl</kbd>+<kbd>D</kbd>，可以跨頁貼上。在物件上按右鍵（觸控是在「選取」時長按）會跳出選單，空白處按右鍵可以「貼在這裡」。</li>
+      <li><b>鎖定</b>：鎖定後不能移動、修改、刪除，整筆擦和「這頁全部清除」也動不到它，適合題目、標題、底圖。要改時用選取點它，按「解除鎖定」。</li>
+      <li><b>無限複製</b>：開啟後，拖曳這個物件會拉出一份新的，原本的留在原地，可以一直拉，適合做「扇形片」「數字卡」讓學生拼組。要移動原本那個，先點一下選它，把無限複製關掉。</li>
+    </ul>
+    <p>選取模式下，物件左上角會出現小標記：橘色數字是簡報出場順序、「鎖」代表已鎖定、「∞」代表無限複製。</p>
+  </section>
+
+  <section id="h-page">
+    <h2>頁面與畫面</h2>
+    <ul>
+      <li><b>翻頁</b>：工具列的 ‹ ›，或鍵盤左右方向鍵、PageUp、PageDown。</li>
+      <li><b>頁面</b>：可以在後面加空白頁、複製這一頁、往前或往後移、刪除。</li>
+      <li><b>清除</b>：可以只清手寫（保留圖片、文字、圖形），或清掉這頁全部（鎖定的會保留）。清錯了按復原。</li>
+      <li><b>背景</b>：綠板、白板，各有方格版。</li>
+      <li><b>縮放</b>：在選取、文字、圖形等工具下，兩指張開或捏合；也可以按 − ＋，或 <kbd>Ctrl</kbd>+滾輪。放大後用選取拖曳空白處，或兩指拖曳可以移動畫面；100% 時畫面固定不動，避免誤觸。點百分比回到 100%，換頁時也會自動回到 100%。</li>
+    </ul>
+  </section>
+
+  <section id="h-show">
+    <h2>簡報模式</h2>
+    <p>用「選取」點物件，在「簡報動畫」選出現、淡入、飛入或放大。出場順序依照位置，由上到下、由左到右，高度差不多的算同一列。想調整先後，直接移動物件位置就好。</p>
+    <p>按工具列的「簡報」進入簡報模式，設定了動畫的物件會先藏起來。黑板左右兩邊中間會出現 ◀ ▶，按 ▶ 讓下一個出現，按 ◀ 退回。也可以用簡報筆或鍵盤的 → ← 、PageDown PageUp、空白鍵；在「選取」時點黑板空白處也會出下一個。這頁都出現完再按就換頁。簡報筆的開始播放鍵（<kbd>F5</kbd>）會進入簡報模式，<kbd>Esc</kbd> 結束。簡報中照樣可以切換畫筆書寫。</p>
+  </section>
+
+  <section id="h-data">
+    <h2>存檔與同步</h2>
+    <p>所有內容都會自動存檔，不用按儲存。沒登入時存在這台電腦的瀏覽器；登入 Google 後會同時同步到雲端硬碟的「數學電子白板」資料夾。首頁卡片上的標籤：</p>
+    <ul>
+      <li><span class="tagd cloud">在雲端</span>還沒下載到這台電腦，點開就會下載。</li>
+      <li><span class="tagd dirty">未同步</span>修改還沒傳上雲端，連上網路後會自動上傳，也可以按「立即同步」。</li>
+      <li><span class="tagd conf">兩邊都改過</span>兩台電腦各改了不同內容，打開時會問你要留哪一份。</li>
+    </ul>
+    <p>卡片上的「匯出檔案」會存成 .json，用首頁的「匯入檔案」可以還原，適合重要的課前一晚備份到隨身碟。Google 的連線大約一小時會逾時，工具列的雲端按鈕會變成「按我連線」，這時內容仍存在這台電腦，下課前按一下重新連線就會同步。</p>
+  </section>
+
+  <section id="h-keys">
+    <h2>快速鍵</h2>
+    <table class="keys">
+      <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd> ／ <kbd>Ctrl</kbd>+<kbd>Y</kbd></td><td>復原／重做</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> <kbd>V</kbd> <kbd>D</kbd></td><td>複製／貼上／再製</td></tr>
+      <tr><td><kbd>Delete</kbd></td><td>刪除選取的物件</td></tr>
+      <tr><td><kbd>→</kbd> <kbd>PageDown</kbd> <kbd>空白鍵</kbd></td><td>下一頁；簡報模式中是下一步</td></tr>
+      <tr><td><kbd>←</kbd> <kbd>PageUp</kbd></td><td>上一頁；簡報模式中是上一步</td></tr>
+      <tr><td><kbd>F5</kbd> ／ <kbd>Esc</kbd></td><td>開始／結束簡報模式</td></tr>
+      <tr><td><kbd>Ctrl</kbd>+<kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd></td><td>放大／縮小／回到 100%</td></tr>
+    </table>
+  </section>
+
+  <section id="h-faq">
+    <h2>常見問題</h2>
+    <ul>
+      <li><b>畫面還是舊的、新功能沒出現</b>：按 <kbd>Ctrl</kbd>+<kbd>F5</kbd> 強制重新整理。</li>
+      <li><b>按登入沒有反應</b>：瀏覽器擋了彈出式視窗，點網址列右邊的圖示，允許這個網站開啟。</li>
+      <li><b>連不到 Google</b>：可能是網路斷線或學校防火牆擋住。黑板照常可以用，只是先存在這台電腦，之後連上網路再同步。</li>
+      <li><b>打字時沒有出現螢幕鍵盤</b>：Windows 白板到設定開啟「沒有連接鍵盤時顯示觸控式鍵盤」，或按 <kbd>Win</kbd>+<kbd>Ctrl</kbd>+<kbd>O</kbd> 叫出螢幕鍵盤。</li>
+      <li><b>手掌一直畫出線</b>：再點一次畫筆，把防手掌誤觸調到中或高；如果白板不回報觸碰大小，改用「只認觸控筆」。</li>
+      <li><b>建議的瀏覽器</b>：Chrome 或 Edge。Android 白板的內建瀏覽器如果太舊，建議另外安裝 Chrome。</li>
+    </ul>
+  </section>
+  </div>
+</div>
 <div id="modal"><div class="box"><div class="mt" id="mTitle"></div><input id="mInput"><div class="mb" id="mBtns"></div></div></div>
 
 <script src="config.js"></script>
@@ -1492,6 +1630,11 @@ async function goHome(){
 }
 document.addEventListener('visibilitychange',()=>{if(document.hidden){flushSave().then(()=>{if(boardId&&Cloud.email)flushPush(boardId);});}});
 
+/* 操作說明 */
+$('#bHelp').addEventListener('click',()=>{$('#help').classList.add('show');$('.hbody').scrollTop=0;});
+$('#helpClose').addEventListener('click',()=>$('#help').classList.remove('show'));
+$('.htoc').addEventListener('click',e=>{const b=e.target.closest('button');if(b){const t=document.getElementById(b.dataset.go);$('.hbody').scrollTo({top:t.offsetTop-$('.hbody').offsetTop-6,behavior:'smooth'});}});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#help').classList.contains('show'))$('#help').classList.remove('show');});
 /* modal */
 function modal({title,input=false,value='',buttons}){
   const md=$('#modal'),mi=$('#mInput'),mb=$('#mBtns');
