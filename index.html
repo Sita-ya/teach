@@ -52,15 +52,15 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 .note{font-size:15px;color:var(--dim)}
 .bgo{width:96px;height:58px;border-radius:10px;border:3px solid transparent;cursor:pointer;font-size:15px;font-family:inherit}
 .bgo.on{border-color:var(--acc)}
-#corner{position:fixed;right:16px;bottom:112px;display:flex;flex-direction:column;align-items:flex-end;gap:10px;z-index:9}
-#corner .cg{display:flex;gap:6px;background:var(--ui);padding:6px;border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
-#corner button{min-width:52px;height:52px;border:none;border-radius:12px;background:var(--ui2);color:var(--txt);font-size:24px;font-family:inherit;cursor:pointer;padding:0 12px}
-#corner button:active{filter:brightness(1.3)}
-#zPct{font-size:17px!important;min-width:76px!important}
-#corner #presCtl{display:none}#corner #presCtl.show{display:flex}
-#cNext{background:var(--acc)!important;color:#fff!important;font-weight:700;font-size:22px!important;min-width:150px!important;height:64px!important}
-#cPrev{height:64px!important}
-#presInfo{font-size:15px;color:var(--dim);align-self:center;padding:0 6px}
+#zoomBox{position:fixed;right:16px;bottom:96px;z-index:9;display:flex;gap:3px;padding:4px;background:var(--ui);border-radius:12px;box-shadow:0 4px 14px rgba(0,0,0,.35);transform-origin:bottom right}
+#zoomBox button{width:38px;height:34px;border:none;border-radius:9px;background:var(--ui2);color:var(--txt);font-size:20px;font-family:inherit;cursor:pointer;padding:0;line-height:1}
+#zoomBox #zPct{width:auto;min-width:58px;padding:0 6px;font-size:14px}
+#zoomBox button:active{filter:brightness(1.3)}
+.presNav{position:fixed;top:50%;width:58px;height:110px;margin-top:-55px;border:none;background:rgba(18,22,26,.42);color:#fff;font-size:30px;z-index:9;display:none;cursor:pointer;padding:0;font-family:inherit}
+.presNav.show{display:block}
+.presNav:active{background:rgba(39,169,154,.85)}
+#presL{border-radius:0 18px 18px 0}#presR{border-radius:18px 0 0 18px}
+.presNav small{display:block;font-size:13px;opacity:.85;margin-top:4px}
 #ctx{position:fixed;z-index:30;display:none;flex-direction:column;min-width:200px;background:#20262c;border-radius:12px;padding:6px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #ctx.show{display:flex}
 #ctx button{height:48px;border:none;background:transparent;color:var(--txt);text-align:left;padding:0 14px;font-size:18px;font-family:inherit;border-radius:8px;cursor:pointer}
@@ -135,8 +135,9 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
 </div>
 <div id="hint"></div>
 <div id="corner" style="display:none">
-  <div class="cg" id="presCtl"><span id="presInfo"></span><button id="cPrev">◀</button><button id="cNext">下一步 ▶</button></div>
-  <div class="cg" id="zoomCtl"><button id="zOut">−</button><button id="zPct">100%</button><button id="zIn">＋</button></div>
+  <button class="presNav" id="presL" title="上一步（←、PageUp）">◀</button>
+  <button class="presNav" id="presR" title="下一步（→、PageDown、空白鍵）">▶<small id="presInfo"></small></button>
+  <div id="zoomBox"><button id="zOut" title="縮小">−</button><button id="zPct" title="回到 100%">100%</button><button id="zIn" title="放大">＋</button></div>
 </div>
 <div id="ctx"></div>
 
@@ -256,13 +257,14 @@ function layout(){
 }
 function fitDock(){
   dock.style.transform='';dock.style.width='';dock.style.left='0';dock.style.right='0';dock.style.transformOrigin='';
-  if(bar.classList.contains('min'))return;
+  if(bar.classList.contains('min')){placeFloat();return;}
   // 中間的四個工具要剛好在螢幕正中央：左右兩側取較寬的一邊當寬度
   const l=bar.querySelector('.bl'),r=bar.querySelector('.br'),m=bar.querySelector('.bmid');
   const side=Math.max(l.scrollWidth,r.scrollWidth),natural=side*2+m.offsetWidth+12+20+16;
   const avail=innerWidth-28,s=Math.min(1,avail/natural);
   if(s<1){dock.style.width=(innerWidth/s)+'px';dock.style.left='0';dock.style.right='auto';dock.style.transform=`scale(${s})`;dock.style.transformOrigin='bottom left';}
   else{dock.style.left='0';dock.style.right='0';dock.style.transformOrigin='';}
+  placeFloat();
 }
 function applyBg(){
   const b=BGS[S.bg];
@@ -873,7 +875,7 @@ $('#zPct').addEventListener('click',()=>{V.z=1;V.ox=0;V.oy=0;setView(1);});
 /* ================= 簡報模式 ================= */
 function togglePresent(){
   commitEditor();presenting=!presenting;revealed=0;animStart.clear();selected=null;pending=null;
-  if(presenting){const n=animList().length;flash(n?`簡報模式：這頁有 ${n} 個動畫，按「下一步」逐一出現`:'簡報模式：這頁沒有設定動畫，「下一步」會直接換頁');}
+  if(presenting){const n=animList().length;flash(n?`簡報模式：這頁有 ${n} 個動畫，按右邊 ▶ 或簡報筆逐一出現（Esc 結束）`:'簡報模式：這頁沒有設定動畫，按 ▶ 會直接換頁（Esc 結束）');}
   renderAll(false);updateOpts();updatePres();
 }
 function step(d){
@@ -890,11 +892,24 @@ function step(d){
 }
 function updatePres(){
   $('#bPlay').classList.toggle('on',presenting);
-  $('#presCtl').classList.toggle('show',presenting);
+  $('#presL').classList.toggle('show',presenting);$('#presR').classList.toggle('show',presenting);
   if(presenting){const n=animList().length;$('#presInfo').textContent=n?`${revealed} / ${n}`:'';}
 }
-$('#cNext').addEventListener('click',()=>step(1));
-$('#cPrev').addEventListener('click',()=>step(-1));
+$('#presR').addEventListener('click',()=>step(1));
+$('#presL').addEventListener('click',()=>step(-1));
+/* 按過的按鈕取消焦點，避免簡報筆送出的空白鍵／Enter 又觸發同一個按鈕 */
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!b.closest('#modal'))b.blur();});
+/* 左右翻頁鈕貼齊黑板左右兩個短邊的中點；縮放鈕放在「簡報、背景、全螢幕」正上方 */
+function placeFloat(){
+  const r=stage.getBoundingClientRect();
+  $('#presL').style.left=r.left+'px';$('#presR').style.left=(r.right-58)+'px';
+  $('#presL').style.top=$('#presR').style.top=(r.top+r.height/2)+'px';
+  const zb=$('#zoomBox');
+  if(bar.classList.contains('min')||dock.style.display==='none'){zb.style.right='16px';zb.style.bottom='96px';zb.style.transform='';return;}
+  const a=$('#bPlay').getBoundingClientRect(),c=$('#bFull').getBoundingClientRect();
+  zb.style.transform='';const w=zb.offsetWidth,mid=(a.left+c.right)/2;
+  zb.style.right=Math.max(4,innerWidth-mid-w/2)+'px';zb.style.bottom=(innerHeight-a.top+10)+'px';
+}
 
 /* ================= keypad ================= */
 function keypad(init){
@@ -1086,7 +1101,8 @@ addEventListener('keydown',e=>{
   const k=e.key.toLowerCase();
   if((e.ctrlKey||e.metaKey)&&k==='z'){e.preventDefault();e.shiftKey?redo():undo();}
   else if((e.ctrlKey||e.metaKey)&&k==='y'){e.preventDefault();redo();}
-  else if(k==='escape'){pending=null;shapeOp=null;updateHint();reqOv();}
+  else if(k==='f5'){e.preventDefault();if(!presenting)togglePresent();}
+  else if(k==='escape'){if(presenting){togglePresent();return;}pending=null;shapeOp=null;updateHint();reqOv();}
   else if((k==='delete'||k==='backspace')&&selected){delSelected();}
   else if((e.ctrlKey||e.metaKey)&&k==='c'){if(selected){e.preventDefault();copySel();}}
   else if((e.ctrlKey||e.metaKey)&&k==='d'){if(selected){e.preventDefault();dupSel();}}
