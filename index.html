@@ -280,7 +280,7 @@ html,body{margin:0;height:100%;background:#0d1013;overflow:hidden;font-family:"N
   <section id="h-shape">
     <h2>圓與扇形</h2>
     <p><b>直線</b>：按住拖曳，接近水平或垂直時會自動對齊。</p>
-    <p><b>圓</b>：從圓心按住往外拉，放開就畫好。上方可以選「等分」（2 到 16 份）和「塗色」幾份，例如分 3 等分、塗 2/3，會從正上方開始順時針塗。畫好後用「選取」點這個圓，可以再改等分和塗色；選取狀態下再點圓裡的某一塊，可以單獨塗上或取消，適合在課堂上一塊一塊塗給學生看。開啟「圓心角標示」，每一塊都會標出圓心角幾度（例如三等分是 120°）。選取這個圓之後，從某一塊往外拖，就能把那一塊拉出來變成獨立的扇形，每一塊都可以拉；圓上會留下虛線空位，把扇形拖回原位附近就會自動合回去。拖圓心附近則是移動整個圓。</p>
+    <p><b>圓</b>：從圓心按住往外拉，放開就畫好。上方可以選「等分」（2 到 16 份）和「塗色」幾份，例如分 3 等分、塗 2/3，會從正上方開始順時針塗。畫好後用「選取」點這個圓，可以再改等分和塗色；選取狀態下再點圓裡的某一塊，可以單獨塗上或取消，適合在課堂上一塊一塊塗給學生看。開啟「圓心角標示」，每一塊都會標出圓心角幾度（例如三等分是 120°）；沒有等分的完整圓則標 360°。選取這個圓之後，從某一塊往外拖，就能把那一塊拉出來變成獨立的扇形，每一塊都可以拉；圓上會留下虛線空位，把扇形拖回原位附近就會自動合回去。拖圓心附近則是移動整個圓。</p>
     <p><b>扇形</b>分兩步：</p>
     <ol>
       <li>從圓心按住，拉出第一條半徑，放開。</li>
@@ -575,6 +575,13 @@ function drawShape(ctx,s){
       const deg=Math.round(36000/n)/100,fz=Math.max(18,Math.min(42,s.r*.13)),dist=s.r*(n>=10?.68:.55);
       ctx.save();ctx.fillStyle=s.c;ctx.font=`bold ${fz}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';
       for(let k=0;k<n;k++){if(out.includes(k))continue;const m=-Math.PI/2+(k+.5)*TAU/n;ctx.fillText(deg+'°',s.cx+dist*Math.cos(m),s.cy+dist*Math.sin(m));}
+      ctx.restore();
+    }
+    if(s.showAng&&n===1){             // 沒有等分的完整圓：圓心畫一圈角度記號，標 360°
+      const ra=Math.max(20,Math.min(52,s.r*.2)),fz=Math.max(20,Math.min(44,s.r*.14));
+      ctx.save();ctx.strokeStyle=s.c;ctx.lineWidth=Math.max(2,s.lw*.6);ctx.beginPath();ctx.arc(s.cx,s.cy,ra,0,TAU);ctx.stroke();
+      dot(ctx,s.cx,s.cy,Math.max(4,s.lw*1.1),s.c);
+      ctx.fillStyle=s.c;ctx.font=`bold ${fz}px ${FONT}`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('360°',s.cx,s.cy-ra-fz*.85);
       ctx.restore();
     }
   }
