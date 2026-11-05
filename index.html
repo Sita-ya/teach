@@ -1018,6 +1018,13 @@ stage.addEventListener('contextmenu',e=>{
   openCtx(e.clientX,e.clientY,hit,[x,y]);
 });
 document.addEventListener('gesturestart',e=>e.preventDefault());
+/* iPad Safari：連續快速寫兩筆時，系統會當成「點兩下」或長按，跳出拷貝／貼上／建立連結選單或放大鏡。
+   在黑板與工具列上擋掉觸控的系統預設動作（Pointer 事件照常運作），只保留文字輸入框。 */
+const noSys=e=>{const t=e.target;if(t===editor||(t.closest&&t.closest('input,textarea')))return;if(e.cancelable)e.preventDefault();};
+for(const el of [stage,dock,$('#corner')])for(const ev of ['touchstart','touchmove','touchend'])el.addEventListener(ev,noSys,{passive:false});
+document.addEventListener('selectstart',e=>{const t=e.target;if(!(t.closest&&t.closest('input,textarea,.hbody')))e.preventDefault();});
+document.addEventListener('dblclick',e=>{if(!home.classList.contains('hide'))return;e.preventDefault();});
+stage.style.webkitUserSelect='none';
 
 /* ================= angle apply ================= */
 function applyAngle(){
